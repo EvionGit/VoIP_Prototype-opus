@@ -12,15 +12,18 @@
 
 class AudioRecorder : public sf::SoundRecorder
 {
+	long long last = 0;
 	stream::AudioStreamIn& astream;
 public:
 	AudioRecorder(stream::AudioStreamIn& astream) : astream(astream)
 	{
-		
+		sf::Time t = sf::milliseconds(20);
+		setProcessingInterval(t);
 	}
 	virtual  bool onProcessSamples(const sf::Int16* samples, size_t sampleCount) override
 	{
-		
+		//printf("%lli\n",(std::chrono::high_resolution_clock::now().time_since_epoch().count() - last)/1000000);
+		//last = std::chrono::high_resolution_clock::now().time_since_epoch().count();
 		astream.stream_write(samples, sampleCount * 2);
 		
 
@@ -28,7 +31,13 @@ public:
 	}
 };
 
+stream::NetStreamAudioOut* nout;
+void sender()
+{
+	nout->stream_read(0, 0, 0);
+}
 
+#define MS 20
 
 int main()
 {
@@ -39,27 +48,29 @@ int main()
 
 
 	stream::AudioStreamIn ain;
-	stream::FileStream fin("C:\\Users\\Андрей\\source\\repos\\Vorbis_Wrapper\\Vogg\\Vorbis_Wrapper\\WAV.wav", "rb");
+	stream::FileStream fin("C:\\Users\\Андрей\\source\\repos\\epica.wav", "rb");
+	jbuf::JitterBuffer j(60, 0, 0, false);
 
-
-	stream::NetStreamAudioOut aout(sock, remote,20);
-
+	stream::NetStreamAudioOut aout(sock, remote, MS);
+	aout.set_jitter_buffer(&j);
+	nout = &aout;
 	AudioRecorder recorder(ain);
 	recorder.setChannelCount(2);
 
-	ops::Encoder encoder(ops::OPUS_TYPE::AUDIO);
-	encoder.set_input_stream(&fin, ops::OPUS_SAMPLES_RATE::kHz48, 2, 20);
+	ops::Encoder encoder(ops::OPUS_TYPE::VOIP);
+	encoder.set_input_stream(&ain, ops::OPUS_SAMPLES_RATE::kHz48, 2, MS);
 	encoder.set_output_stream(&aout, ops::OPUS_SAMPLES_RATE::kHz48, 2);
 	encoder.set_bitrate(128000);
-	encoder.set_tick_rate(20);
+	//encoder.set_tick_rate(MS);
 	
+	MMRESULT m = timeSetEvent(MS, 0, (LPTIMECALLBACK)sender, 0, TIME_PERIODIC);
 	
 
-	//recorder.start();
+	recorder.start(48000);
 
 	printf("recording..\n");
 
 	encoder.encode();
-
+	timeKillEvent(m);
 	return 0;
 }

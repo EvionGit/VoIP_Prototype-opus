@@ -1,38 +1,103 @@
+//#include <stream/net_stream_audio_out.h>
+//
+//namespace stream
+//{
+//
+//
+//	NetStreamAudioOut::NetStreamAudioOut(wsock::udpSocket& local, wsock::addr& remote_addr, int32_t ms)
+//		: sock(local), remote(remote_addr)
+//	{
+//		memset(sendbuf, 0, sizeof(sendbuf));
+//		packet.id = 0;
+//		packet.timestamp = 0;
+//		packet.data_in_ms = ms;
+//
+//	}
+//
+//	NetStreamAudioOut::~NetStreamAudioOut(){}
+//
+//	size_t NetStreamAudioOut::stream_write(const void* frombuffer, size_t writesize)
+//	{
+//		
+//		packet.id++;
+//		packet.size = writesize;
+//		packet.timestamp = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+//		packet.data = (char*)frombuffer;
+//		
+//		memcpy(sendbuf, &packet, sizeof(packet));
+//		memcpy(sendbuf + sizeof(packet), packet.data, packet.size);
+//		printf("[%u] %lli\n",packet.id,(packet.timestamp-last)/1000000);
+//		last = packet.timestamp;
+//		sock._sendto(remote, sendbuf, sizeof(packet) + packet.size, 0);
+//
+//		return 1;
+//
+//
+//	}
+//
+//	size_t NetStreamAudioOut::stream_read(void* tobuffer, size_t buffersize, size_t readamount)
+//	{
+//		return 0;
+//	};
+//}
+
 #include <stream/net_stream_audio_out.h>
 
 namespace stream
 {
-
-
-	NetStreamAudioOut::NetStreamAudioOut(wsock::udpSocket& local, wsock::addr& remote_addr, int32_t ms)
-		: sock(local), remote(remote_addr)
+	NetStreamAudioOut::NetStreamAudioOut(wsock::udpSocket& local_addr, wsock::addr remote_addr, uint32_t rate)
+		: local(local_addr), remote(remote_addr), jb(0), sample_rate(rate)
 	{
-		memset(sendbuf, 0, sizeof(sendbuf));
-		packet.id = 0;
-		packet.timestamp = 0;
-		packet.data_in_ms = ms;
+		packet_headers.id = 0;
+		packet_headers.timestamp = 0;
 
 	}
 
-	NetStreamAudioOut::~NetStreamAudioOut(){}
+	NetStreamAudioOut::~NetStreamAudioOut() {}
+
+	size_t NetStreamAudioOut::stream_read(void* tobuffer, size_t buffersize, size_t readamount)
+	{
+		pack::AudioPacket ap;
+		if (jb->pop(ap) == JSUCCESS)
+		{
+			ap.timestamp = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+			memcpy(sendbuffer, &ap, sizeof(ap));
+			memcpy(sendbuffer + sizeof(ap), ap.data, ap.size);
+
+			//printf("SEND %lli\n", (ap.timestamp-last) / 1000000);
+			last = ap.timestamp;
+			local._sendto(remote, sendbuffer, sizeof(ap) + ap.size, 0);
+		}
+
+
+		return 1;
+	}
 
 	size_t NetStreamAudioOut::stream_write(const void* frombuffer, size_t writesize)
 	{
-		
-		packet.id++;
-		packet.size = writesize;
-		packet.timestamp = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-		packet.data = (char*)frombuffer;
+	
 
-		memcpy(sendbuf, &packet, sizeof(packet));
-		memcpy(sendbuf + sizeof(packet), packet.data, packet.size);
+		if (jb)
+		{
+			packet_headers.id++;
+			packet_headers.size = writesize;
+			packet_headers.data_in_ms = 20;
+			packet_headers.timestamp = 0;
+			packet_headers.data = (char*)frombuffer;
 
-		sock._sendto(remote, sendbuf, sizeof(packet) + packet.size, 0);
+			while (jb->push(packet_headers, std::chrono::high_resolution_clock::now()) == JFULLSTACK)
+			{
+				std::this_thread::sleep_for(std::chrono::milliseconds(20));
+			}
+		}
 
 		return 1;
 
 
 	}
 
-	size_t NetStreamAudioOut::stream_read(void* tobuffer, size_t buffersize, size_t readamount) { return 0; };
+	void NetStreamAudioOut::set_jitter_buffer(jbuf::JitterBuffer* jbuffer)
+	{
+		jb = jbuffer;
+	}
 }

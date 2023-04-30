@@ -108,7 +108,7 @@ namespace ops
 				if (!send_event)
 					send_event = CreateEvent(0, TRUE, FALSE, (LPCWSTR)"TICK_SEND");
 
-				mm_id = timeSetEvent(tick_rate, 0, (LPTIMECALLBACK)tick_send, (DWORD_PTR)this, TIME_ONESHOT);
+				mm_id = timeSetEvent(tick_rate-3, 0, (LPTIMECALLBACK)tick_send, (DWORD_PTR)this, TIME_ONESHOT);
 				WaitForSingleObject(send_event, INFINITE);
 				timeKillEvent(mm_id);
 				ResetEvent(send_event);

@@ -4,7 +4,7 @@
 #include "stream.h"
 
 /*  default buf size for 10 raw audio packets with monophonic 16-bit 44100hz splitted into 30-40ms */
-#define AUDIOBUFF 32768
+#define AUDIOBUFF 1920*2*6
 
 namespace stream
 {
