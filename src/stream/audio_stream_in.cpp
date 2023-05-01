@@ -125,4 +125,10 @@ namespace stream
 		return writesize;
 
 	}
+
+	bool AudioStreamIn::onProcessSamples(const sf::Int16* samples, size_t sampleCount)
+	{
+		stream_write(samples, sampleCount * 2);
+		return true;
+	};
 }

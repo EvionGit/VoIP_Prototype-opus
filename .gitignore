@@ -10,8 +10,7 @@
 *.userosscache
 *.sln.docstates
 
-#Source.cpp
-./src/Source.cpp
+
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

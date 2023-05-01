@@ -4,12 +4,15 @@
 #include <stdint.h>
 #include <string.h>
 
+#define AUDIO_PACKET_TYPE 55
+
 namespace pack
 {
 	class AudioPacket
 	{
 	public:
 
+		int8_t packet_type;
 		uint32_t id;
 		uint16_t size;
 		int32_t data_in_ms;

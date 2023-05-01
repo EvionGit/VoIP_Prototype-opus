@@ -10,9 +10,16 @@ namespace stream
 	size_t NetStreamAudioIn::stream_read(void* tobuffer, size_t buffersize, size_t readamount) 
 	{
 		AudioPacket ap;
-		while (jb->pop(ap) != JSUCCESS)
+		int stat = 0;
+		while ((stat = jb->pop(ap)) != JSUCCESS)
 		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(20));
+			if (stat == JLOSTPACKET)
+			{
+				//printf("--LOSTPACKET\n");
+				return -2;
+			}
+				
+			//std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		}
 
 	
@@ -28,6 +35,7 @@ namespace stream
 		ap->data = payload;
 	
 		Ttimepoint arr = std::chrono::high_resolution_clock::now();
+		
 		return jb->push(*ap,arr);
 
 		 

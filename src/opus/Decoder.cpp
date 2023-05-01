@@ -33,14 +33,16 @@ namespace ops
 READER:
 		while((read = input->stream_read(ichunk,4000,4000)) > 0)
 		{
-			r = opus_decode(dec, ichunk, read, ochunk, ochunk_size / ochannels, 0);
-			output->stream_write(ochunk, r * ochannels);
+			r = opus_decode(dec, ichunk, read, ochunk, ochunk_size / 2, 0);
+			
+			
+			output->stream_write(ochunk, r * ochannels*2);
 		}
 
 		if (read == OPS_LOST_PACKET)
 		{
-			r = opus_decode(dec, 0, read, ochunk, ochunk_size / ochannels, 0);
-			output->stream_write(ochunk, r * ochannels);
+			r = opus_decode(dec, 0, read, ochunk, ochunk_size / 2, 0);
+			output->stream_write(ochunk, r * ochannels*2);
 			goto READER;
 		}
 
@@ -60,6 +62,7 @@ READER:
 
 		if (dec)
 			opus_decoder_destroy(dec);
+
 
 		dec = opus_decoder_create(irate, ichannels, &errorcode);
 	}
