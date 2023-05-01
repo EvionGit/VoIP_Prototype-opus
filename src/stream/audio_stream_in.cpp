@@ -20,7 +20,7 @@ namespace stream
 			if (!size)
 			{
 				mtx.unlock();
-				//printf("WAIT GET\n");
+				printf("WAIT GET\n");
 				/* give a time to CPU */
 				std::this_thread::sleep_for(std::chrono::milliseconds(20));
 				continue;

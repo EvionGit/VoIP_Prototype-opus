@@ -25,44 +25,45 @@
 
 
 
-void recv_data(stream::NetStreamAudioIn& stream)
-{
-	wsock::WSA_INIT wsa;
-	wsock::udpSocket sock("0.0.0.0", "5555");
-	wsock::addr remote;
-
-
-	uint64_t start = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
-	int32_t jitter = 0;
-	int32_t d = 0;
-
-	int32_t last_received = 0;
-	int32_t last_packet_timestamp = 0;
-	int32_t avg = 0;
-	int32_t count = 0;
-
-	char buff[2048];
-
-	long long last = 0;
-	size_t m;
-	while (1)
-	{
-		if ((m = sock._recvfrom(remote, &buff, sizeof(buff), 0)) > 0)
-		{
-			pack::AudioPacket* ap = (pack::AudioPacket*)buff;
-			
-			//printf("%u: %lli\n",ap->id, (ap->timestamp - last) / 1000000);
-			//last = ap->timestamp;
-
-			//stream.stream_write(buff+sizeof(pack::AudioPacket), ap->size);
-
-			stream.stream_write(buff, m);
-		}
-
-	}
-	printf("END\n");
-
-}
+//void recv_data(stream::NetStreamAudioIn& stream)
+//{
+//
+//	wsock::WSA_INIT wsa;
+//	wsock::udpSocket sock("0.0.0.0", "5555");
+//	wsock::addr remote;
+//
+//
+//	uint64_t start = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
+//	int32_t jitter = 0;
+//	int32_t d = 0;
+//
+//	int32_t last_received = 0;
+//	int32_t last_packet_timestamp = 0;
+//	int32_t avg = 0;
+//	int32_t count = 0;
+//
+//	char buff[2048];
+//
+//	long long last = 0;
+//	size_t m;
+//	while (1)
+//	{
+//		if ((m = sock._recvfrom(remote, &buff, sizeof(buff), 0)) > 0)
+//		{
+//			pack::AudioPacket* ap = (pack::AudioPacket*)buff;
+//			
+//			//printf("%u: %lli\n",ap->id, (ap->timestamp - last) / 1000000);
+//			//last = ap->timestamp;
+//
+//			//stream.stream_write(buff+sizeof(pack::AudioPacket), ap->size);
+//
+//			stream.stream_write(buff, m);
+//		}
+//
+//	}
+//	printf("END\n");
+//
+//}
 
 
 //int main()
@@ -188,11 +189,13 @@ public:
 			delete listener;
 		if (jbuffer)
 			delete jbuffer;
-		
 	}
+
+
 
 	void multiplex()
 	{
+
 		char buff[1024];
 		wsock::addr from;
 		pack::AudioConfigPacket* conf;
@@ -626,6 +629,7 @@ public:
 	}
 };
 
+
 #define VOIP_APP 1
 #define STREAM_APP 2
 
@@ -635,22 +639,25 @@ int main()
 	wsock::udpSocket sock("0.0.0.0", "5555");
 	VoIP voip(sock);
 
+
 	sf::RenderWindow window(sf::VideoMode(800, 1000), "VoIP - prototype");
 	window.setFramerateLimit(60);
 	ImGui::SFML::Init(window);
-	
-	
+
 
 	uint8_t app = VOIP_APP;
-	/************************************/
+	
 
 	sf::Clock deltaClock;
-	while (window.isOpen()) {
+	while (window.isOpen())
+	{
 		sf::Event event;
-		while (window.pollEvent(event)) {
+		while (window.pollEvent(event))
+		{
 			ImGui::SFML::ProcessEvent(window, event);
 
-			if (event.type == sf::Event::Closed) {
+			if (event.type == sf::Event::Closed)
+			{
 				window.close();
 			}
 		}
@@ -664,6 +671,7 @@ int main()
 		window.clear();
 		ImGui::SFML::Render(window);
 		window.display();
+
 	}
 
 	ImGui::SFML::Shutdown();

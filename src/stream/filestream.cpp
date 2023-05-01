@@ -12,6 +12,10 @@ namespace stream
 			printf("FILE IN ERROR: %i", code);
 			//throw
 		};
+
+		char header[44];
+		fread(header, 1, 44, f);
+		printf("SAMPLES RATE: %i\n",*(int*)(header+24));
 	
 	};
 
