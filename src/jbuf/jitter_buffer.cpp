@@ -50,22 +50,22 @@ namespace jbuf
 
 	JitterBuffer::~JitterBuffer()
 	{
-		reset_remote_config();
+		reset_jitter_buffer();
 	}
 
 
-	void JitterBuffer::reset_remote_config()
+	void JitterBuffer::reset_jitter_buffer()
 	{
 		std::lock_guard<std::mutex> lock(mtx);
 
-		/*for (auto it = payload_memory_pool.begin(); it != payload_memory_pool.end(); it++)
-			delete[] *it;*/
 
 		for (auto it = buffer.begin(); it != buffer.end(); it++)
 			delete[] it->data;
 
-		//payload_memory_pool.clear();
+	
 		buffer.clear();
+		isFirst_packet = true;
+		last_packet_id = 0;
 
 		interpackets_delay_ms = 0;
 		payload_ms_per_packet = 0;
@@ -73,26 +73,7 @@ namespace jbuf
 		current_buffer_size_ms = 0;
 	}
 
-	void JitterBuffer::init(uint32_t payload_ms, uint64_t max_payload_size_bytes)
-	{
-		// need?
-		reset_remote_config();
-
-		std::lock_guard<std::mutex> lock(mtx);
-
-		this->payload_ms_per_packet = payload_ms;
-		this->max_payload_size_bytes = max_payload_size_bytes;
-
-		int count_ptrs = (int)std::ceil((float)max_jitter_ms / payload_ms);
-
-		/*for (int i = 0; i < count_ptrs; i++)
-		{
-			payload_memory_pool.push_back(new char[max_payload_size_bytes]);
-		}*/
-
-
-	}
-
+	
 
 	int JitterBuffer::push(AudioPacket& packet, Ttimepoint arrived_time)
 	{
@@ -201,10 +182,17 @@ namespace jbuf
 
 		AudioPacket& ap = buffer.front();
 
+		if (isFirst_packet)
+		{
+			isFirst_packet = false;
+			last_packet_id = ap.id-1;
+		
+
+		}
+
 		if (ap.id != last_packet_id + 1)
 		{
 			last_packet_id++;
-			// silence packet ?
 			return JLOSTPACKET;
 		}
 

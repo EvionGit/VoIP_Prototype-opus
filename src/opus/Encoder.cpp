@@ -51,7 +51,8 @@ namespace ops
 
 	void Encoder::set_output_stream(Stream* out)
 	{
-		
+
+
 		if (ochunk)
 			delete[] ochunk;
 
@@ -86,6 +87,12 @@ namespace ops
 			this->bitrate = bitrate;
 		}
 
+	}
+
+	void Encoder::thread_encode()
+	{
+		std::thread t1(&Encoder::encode, this);
+		t1.detach();
 	}
 
 	int Encoder::encode()

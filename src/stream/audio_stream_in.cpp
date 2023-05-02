@@ -21,7 +21,15 @@ namespace stream
 		{
 			mtx.lock();
 
-			if (end_of_file)
+
+			if(end_of_file)
+			{
+				mtx.unlock();
+				return 0;
+			}
+			
+			/* waiting until audiobuffer < 4096 bytes */
+			if (!size)
 			{
 				mtx.unlock();
 				return 0;
