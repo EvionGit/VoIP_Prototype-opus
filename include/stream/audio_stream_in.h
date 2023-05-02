@@ -15,11 +15,12 @@ namespace stream
 	private:
 		std::mutex mtx;
 		bool end_of_file = true;
-
 		/* in this case the buffer is cycle*/
 		char audiobuffer[AUDIOBUFF];
 		uint32_t s, e; // start and end point
 		uint32_t size;
+
+		long long last = 0;
 
 	public:
 		AudioStreamIn();

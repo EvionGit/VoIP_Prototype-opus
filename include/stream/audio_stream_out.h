@@ -13,9 +13,10 @@ namespace stream
 	class AudioStreamOut : public Stream, public sf::SoundStream
 	{
 	private:
+
 		ops::Decoder* dec;
 		int16_t sampbuf[LISTENERBUFFER];
-		
+
 
 	public:
 		AudioStreamOut();

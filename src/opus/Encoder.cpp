@@ -51,6 +51,8 @@ namespace ops
 
 	void Encoder::set_output_stream(Stream* out)
 	{
+
+
 		if (ochunk)
 			delete[] ochunk;
 
@@ -68,6 +70,13 @@ namespace ops
 		if (tick_ms >= 0)
 			tick_rate = tick_ms;
 
+	}
+
+	void Encoder::thread_encode()
+	{
+		std::thread t1(&Encoder::encode, this);
+		t1.detach();
+		
 	}
 
 	void Encoder::set_bitrate(int32_t bitrate)
@@ -100,9 +109,11 @@ namespace ops
 
 		int read = 0;
 		int i = 1;
+		long long last = 0;
 		while((read = input->stream_read(ichunk,ichunk_size*2,ichunk_size*2)) > 0)
 		{
-			
+			//printf("READ: %i  - %lli\n",read, (std::chrono::high_resolution_clock::now().time_since_epoch().count() - last) / 1000000);
+			last = std::chrono::high_resolution_clock::now().time_since_epoch().count();
 			ochunk_size = opus_encode(enc, ichunk, ichunk_size / ichannels, ochunk, 4000);
 			
 			if (tick_rate)
@@ -122,7 +133,7 @@ namespace ops
 
 		}
 
-		
+		printf("CLOSE ENCODE\n");
 		CloseHandle(send_event);
 		return 0;
 

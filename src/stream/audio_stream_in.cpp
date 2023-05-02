@@ -5,16 +5,22 @@ namespace stream
 {
 	AudioStreamIn::AudioStreamIn() : s(0),e(0),size(0)
 	{
+		sf::Time t = sf::milliseconds(20);
+		setProcessingInterval(t);
 		memset(audiobuffer, 0, AUDIOBUFF);
 	}
 
-	AudioStreamIn::~AudioStreamIn(){}
+	AudioStreamIn::~AudioStreamIn()
+	{
+		
+	}
 
 	size_t AudioStreamIn::stream_read(void* tobuffer, size_t buffersize, size_t readamount)
 	{
 		while(1)
 		{
 			mtx.lock();
+
 
 			if(end_of_file)
 			{
@@ -26,9 +32,18 @@ namespace stream
 			if (!size)
 			{
 				mtx.unlock();
-				printf("WAIT GET\n");
+				return 0;
+				
+			}
+			
+	
+			/* waiting until audiobuffer < 4096 bytes */
+			if (size < readamount)
+			{
+				mtx.unlock();
+			
 				/* give a time to CPU */
-				std::this_thread::sleep_for(std::chrono::milliseconds(20));
+				//std::this_thread::sleep_for(std::chrono::milliseconds(20));
 				continue;
 			}
 
@@ -134,6 +149,9 @@ namespace stream
 
 	bool AudioStreamIn::onProcessSamples(const sf::Int16* samples, size_t sampleCount)
 	{
+		printf("RECORDED\n");
+		/*printf("%lli\n", (std::chrono::high_resolution_clock::now().time_since_epoch().count() - last) / 1000000);
+		last = std::chrono::high_resolution_clock::now().time_since_epoch().count();*/
 		stream_write(samples, sampleCount * 2);
 		return true;
 	};

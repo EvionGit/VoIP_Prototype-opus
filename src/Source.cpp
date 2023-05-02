@@ -205,6 +205,7 @@ public:
 							remote_conf = *conf;
 							accept_to();
 							
+							
 						}
 					}
 					else if(conf->packet_type == CONF_BUSY_TYPE)
@@ -259,7 +260,9 @@ public:
 			isIncoming = false;
 			inProcessing = true;
 			start_process = std::chrono::high_resolution_clock::now();
+			
 
+			start_record_process();
 			start_listen_process();
 
 		}
@@ -275,10 +278,10 @@ public:
 	{
 		std::lock_guard<std::mutex> lock(mtx);
 
-		
 		if (sender)
 			delete sender;
 		sender = new stream::NetStreamAudioOut(sock, *remote, local_conf.data_size_ms);
+
 
 		
 
@@ -286,8 +289,11 @@ public:
 		isIncoming = false;
 		inProcessing = true;
 		start_process = std::chrono::high_resolution_clock::now();
+
+		start_record_process();
 		start_listen_process();
 		
+
 
 		return 1;
 	}
@@ -298,9 +304,15 @@ public:
 		
 		if (inProcessing)
 		{
-			end_listen_process();
+			stop_listen_process();
 		}
 			
+
+		if (inProcessing)
+		{
+			stop_record_process();
+			stop_listen_process();
+		}			
 
 		isCalling = false;
 		inProcessing = false;
@@ -309,14 +321,13 @@ public:
 
 		local_conf.packet_type = CONF_ABORTING_TYPE;
 
+
 		sock._sendto(*remote, &local_conf, sizeof(local_conf));
 	
 		callref = call;
 		return 1;
 	}
 
-
-	
 	void set_ui()
 	{
 		window_pos = ImVec2(0, 0);
@@ -521,11 +532,17 @@ public:
 				if (ImGui::ImageButton(*micref, ImVec2(60, 60)))
 				{
 					if (isMuting)
+					{
 						micref = mic;
+						start_record_process();
+					}
+						
 					else
+					{
 						micref = mic + 1;
-
-
+						stop_record_process();
+					}
+					
 					isMuting = !isMuting;
 				}
 
@@ -542,7 +559,7 @@ public:
 					else
 					{
 						speakref = speak + 1;
-						end_listen_process();
+						stop_listen_process();
 					}
 
 
@@ -576,6 +593,7 @@ public:
 
 	void start_record_process()
 	{
+
 		
 		enc->set_bitrate(bitrate);
 		enc->set_input_stream(recorder, local_conf.samples_rate, local_conf.channels, local_conf.data_size_ms);
@@ -603,9 +621,9 @@ public:
 
 	}
 
-	void end_listen_process()
+	void stop_listen_process()
 	{
-		listener->stop();
+		recorder->stop();
 	}
 
 	std::string get_clock(long long time_in_sec)

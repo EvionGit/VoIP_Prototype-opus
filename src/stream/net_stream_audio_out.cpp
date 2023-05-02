@@ -75,20 +75,32 @@ namespace stream
 
 	size_t NetStreamAudioOut::stream_write(const void* frombuffer, size_t writesize)
 	{
-	
+		packet_headers.packet_type = AUDIO_PACKET_TYPE;
+		packet_headers.id++;
+		packet_headers.size = writesize;
+		packet_headers.data_in_ms = 20;
+		packet_headers.timestamp = 0;
+		packet_headers.data = (char*)frombuffer;
 
 		if (jb)
 		{
-			packet_headers.id++;
-			packet_headers.size = writesize;
-			packet_headers.data_in_ms = 20;
-			packet_headers.timestamp = 0;
-			packet_headers.data = (char*)frombuffer;
+
 
 			while (jb->push(packet_headers, std::chrono::high_resolution_clock::now()) == JFULLSTACK)
 			{
 				std::this_thread::sleep_for(std::chrono::milliseconds(20));
 			}
+		}
+		else
+		{
+			packet_headers.timestamp = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+			memcpy(sendbuffer, &packet_headers, sizeof(packet_headers));
+			memcpy(sendbuffer + sizeof(packet_headers), packet_headers.data, packet_headers.size);
+
+			/*printf("SEND %lli\n", (packet_headers.timestamp - last) / 1000000);
+			last = packet_headers.timestamp;*/
+			//printf("remote: %s\n",remote._get_straddr().c_str());
+			local._sendto(remote, sendbuffer, sizeof(packet_headers) + packet_headers.size, 0);
 		}
 
 		return 1;
