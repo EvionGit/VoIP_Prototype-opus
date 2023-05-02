@@ -594,6 +594,7 @@ public:
 	void start_listen_process()
 	{
 
+		receiver->set_jitter_buffer(jbuffer);
 		receiver->reset_jitter_buffer();
 		dec->set_input_stream(receiver);
 		listener->set_listener_conf(remote_conf.samples_rate, remote_conf.channels);
