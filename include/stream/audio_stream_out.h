@@ -3,6 +3,7 @@
 
 #include "stream.h"
 #include <SFML/Audio.hpp>
+#include <ops/decoder.h>
 
 /*  default buf size for 10 raw audio packets with monophonic 16-bit 44100hz splitted into 30-40ms */
 #define AUDIOBUFFOUT 32768
@@ -13,9 +14,10 @@ namespace stream
 	{
 	private:
 		std::mutex mtx;
-
+		ops::Decoder* dec = 0;
 		char buff[LISTENERBUFFER];
 		/* in this case the buffer is cyclical */
+		int16_t sampbuf[LISTENERBUFFER];
 		char audiobuffer[AUDIOBUFFOUT];
 		uint32_t s, e; // start and end point
 		uint32_t size;
@@ -40,6 +42,8 @@ namespace stream
 		virtual void onSeek(sf::Time timeOffset) override;
 
 		void set_listener_conf(uint32_t rate, uint8_t channels);
+
+		void set_decoder(ops::Decoder* dec);
 
 
 	};

@@ -254,12 +254,13 @@ public:
 						}
 						
 					}
-					else if(conf->packet_type = CONF_ACCEPT_TYPE)
+					else if(conf->packet_type == CONF_ACCEPT_TYPE)
 					{
 						if (isCalling && from._get_straddr() == remote->_get_straddr())
 						{
 							aconf = *conf;
 							accept_to();
+							
 							
 						}
 					}
@@ -347,6 +348,8 @@ public:
 			isIncoming = false;
 			inProcessing = true;
 			start_process = std::chrono::high_resolution_clock::now();
+			start_data_process();
+
 
 		}
 		
@@ -365,7 +368,7 @@ public:
 		{
 		case 8000:
 			dec->set_input_stream(receiver, ops::kHz8, aconf.channels);
-			listener->set_listener_conf(8000, aconf.channels);
+			//listener->set_listener_conf(8000, aconf.channels);
 			break;
 		case 12000:
 			dec->set_input_stream(receiver, ops::kHz12, aconf.channels);
@@ -383,6 +386,7 @@ public:
 
 		if (sender)
 			delete sender;
+	
 		sender = new stream::NetStreamAudioOut(sock, *remote, 20);
 
 		enc->set_output_stream(sender, ops::kHz48, 2);
@@ -391,7 +395,9 @@ public:
 		isIncoming = false;
 		inProcessing = true;
 		start_process = std::chrono::high_resolution_clock::now();
-		
+		start_data_process();
+
+		printf("ACCEPTED\n");
 
 		return 1;
 	}
@@ -400,6 +406,9 @@ public:
 	{
 		std::lock_guard<std::mutex> lock(mtx);
 
+		if (inProcessing)
+			end_data_process();
+
 		isCalling = false;
 		inProcessing = false;
 		isIncoming = false;
@@ -407,8 +416,7 @@ public:
 		aconf.packet_type = CONF_ABORTING_TYPE;
 
 		sock._sendto(*remote, &aconf, sizeof(aconf));
-		delete remote;
-		remote = 0;
+		
 
 
 		callref = call;
@@ -416,8 +424,6 @@ public:
 		return 1;
 	}
 
-
-	
 	void set_ui()
 	{
 		wcallto_pos = ImVec2(0, 0);
@@ -622,11 +628,17 @@ public:
 				if (ImGui::ImageButton(*micref, ImVec2(60, 60)))
 				{
 					if (isMuting)
+					{
 						micref = mic;
+						start_recorder_process();
+					}
+						
 					else
+					{
 						micref = mic + 1;
-
-
+						end_recorder_process();
+					}
+					
 					isMuting = !isMuting;
 				}
 
@@ -668,16 +680,17 @@ public:
 
 	}
 
-	void start_data_process()
+	void start_record_process()
 	{
-		// t1 - encoder , t2 - recorder, t3? - sender
-		// t5 - listener
-		listener->play();
+	
+		recorder->setChannelCount(2);
+		recorder->start(48000);
+		enc->thread_encode();
 	}
 
-	void end_data_process()
+	void end_record_process()
 	{
-		listener->stop();
+		recorder->stop();
 	}
 
 	std::string get_clock(long long time_in_sec)

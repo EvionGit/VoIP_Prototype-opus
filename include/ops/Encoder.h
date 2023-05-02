@@ -41,9 +41,10 @@ namespace ops
 		~Encoder();
 
 	public:
+		void thread_encode();
 		int encode();
 		void set_input_stream(Stream* in, OPUS_SAMPLES_RATE rate, int32_t channels,int32_t ms);
-		void set_output_stream(Stream* out, OPUS_SAMPLES_RATE rate, int32_t channels);
+		void set_output_stream(Stream* out);
 		void set_tick_rate(uint32_t tick_ms);
 		void set_bitrate(int32_t bitrate);
 

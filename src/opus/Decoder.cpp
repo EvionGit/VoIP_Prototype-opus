@@ -46,6 +46,8 @@ namespace ops
 			return r * ochannels * 2;
 
 		}
+
+		return 0;
 	}
 
 	int Decoder::decode()

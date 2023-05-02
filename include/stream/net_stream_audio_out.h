@@ -50,7 +50,7 @@ namespace stream
 		pack::AudioPacket packet_headers;
 		jbuf::JitterBuffer* jb;
 		wsock::udpSocket& local;
-		wsock::addr& remote;
+		wsock::addr remote;
 		std::mutex mtx;
 		char sendbuffer[2048];
 		uint32_t sample_rate;

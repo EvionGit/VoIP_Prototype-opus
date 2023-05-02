@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <ops/opus_base.h>
 
 #define AUDIO_KEY 3140035
 #define CONF_CONNECTION_TYPE 1
@@ -20,7 +21,7 @@ namespace pack
 
 		int8_t packet_type;
 		uint32_t key;
-		uint32_t samples_rate;
+		ops::OPUS_SAMPLES_RATE samples_rate;
 		uint16_t channels;
 		uint16_t data_size_ms;
 		
