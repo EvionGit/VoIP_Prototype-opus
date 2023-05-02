@@ -20,6 +20,34 @@ namespace ops
 			opus_decoder_destroy(dec);
 	}
 
+	int Decoder::decode_to(int16_t* samples)
+	{
+		if (!input)
+			return OPS_INPUT_STREAM_NOT_FOUND;
+		if (!output)
+			return OPS_OUTPUT_STREAM_NOT_FOUND;
+		if (errorcode != 0)
+			return errorcode;
+
+		int read = input->stream_read(ichunk, 4000, 4000);
+
+		if (read == OPS_LOST_PACKET)
+		{
+			int r = opus_decode(dec, 0, read, ochunk, ochunk_size / 2, 0);
+			memcpy(samples, ochunk, r * ochannels * 2);
+			return r * ochannels * 2;
+			
+		}
+		else if(read > 0)
+		{
+			int r = opus_decode(dec, ichunk, read, ochunk, ochunk_size / 2, 0);
+
+			memcpy(samples, ochunk, r * ochannels * 2);
+			return r * ochannels * 2;
+
+		}
+	}
+
 	int Decoder::decode()
 	{
 		if (!input)

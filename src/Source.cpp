@@ -111,6 +111,9 @@ private:
 
 	pack::AudioConfigPacket aconf;
 
+	std::chrono::high_resolution_clock::time_point start_process;
+	long long current_process;
+
 private:
 	ImVec2 wcallto_pos;
 	ImVec2 wcallto_size;
@@ -137,6 +140,8 @@ private:
 	sf::Texture call[2];
 	sf::Texture* callref;
 
+	sf::Texture process;
+
 	/* main window state */
 	bool isCalling;
 	bool inProcessing;
@@ -147,7 +152,7 @@ private:
 	bool isSpeaking;
 
 public:
-	VoIP(wsock::udpSocket& local) : sock(local)
+	VoIP(wsock::udpSocket& local) : sock(local), current_process(0)
 	{
 		
 		jbuffer = new jbuf::JitterBuffer(40, 0, 100, true);
@@ -341,6 +346,7 @@ public:
 
 			isIncoming = false;
 			inProcessing = true;
+			start_process = std::chrono::high_resolution_clock::now();
 
 		}
 		
@@ -384,6 +390,8 @@ public:
 
 		isIncoming = false;
 		inProcessing = true;
+		start_process = std::chrono::high_resolution_clock::now();
+		
 
 		return 1;
 	}
@@ -448,6 +456,8 @@ public:
 		call[1].loadFromFile("..\\img\\endcall.png");
 		callref = call;
 
+		process.loadFromFile("..\\img\\process.png");
+
 		isCalling = false;
 		inProcessing = false;
 		isIncoming = false;
@@ -502,8 +512,38 @@ public:
 		}
 		else
 		{
+			if (inProcessing && ImGui::Begin("process_win",0,wcallto))
+			{
+
+				current_process = (std::chrono::high_resolution_clock::now().time_since_epoch().count()
+									- start_process.time_since_epoch().count()) / 1000000000;
+
+				ImGui::SetWindowPos("process_win", wcallto_pos);
+				ImGui::SetWindowSize("process_win", wcallto_size);
+
+				
+				ImGui::SetCursorPos(ImVec2(200, 150));
+				ImGui::Image(process,ImVec2(400,400));
+				
+				ImGui::SetWindowFontScale(2);
+				mtx.lock();
+				ImGui::SetCursorPos(ImVec2((800 - ImGui::CalcTextSize(remote->_get_straddr().c_str()).x) / 2, 600));
+				ImGui::LabelText("##", "%s", remote->_get_straddr().c_str());
+			
+				ImGui::SetCursorPos(ImVec2(352, 650));
+				ImGui::LabelText("##", "%s", get_clock(current_process).c_str());
+				
+
+				mtx.unlock();
+
+				
+
+
+				ImGui::End();
+			}
+
 			/* call_to window */
-			if (!isCalling && ImGui::Begin("callto_win", 0, wcallto))
+			else if (!isCalling && ImGui::Begin("callto_win", 0, wcallto))
 			{
 
 				ImGui::SetWindowPos("callto_win", wcallto_pos);
@@ -626,6 +666,39 @@ public:
 
 		}
 
+	}
+
+	void start_data_process()
+	{
+		// t1 - encoder , t2 - recorder, t3? - sender
+		// t5 - listener
+		listener->play();
+	}
+
+	void end_data_process()
+	{
+		listener->stop();
+	}
+
+	std::string get_clock(long long time_in_sec)
+	{
+		uint8_t h = 0, m = 0, s = 0;
+		std::string hs, ms, ss;
+
+		h = std::floor(time_in_sec / 3600);
+		time_in_sec %= 3600;
+
+		m = std::floor(time_in_sec / 60);
+		time_in_sec %= 60;
+
+		s = time_in_sec;
+
+		
+		hs = h < 10 ? "0" + std::to_string(h) : std::to_string(h);
+		ms = m < 10 ? "0" + std::to_string(m) : std::to_string(m);
+		ss = s < 10 ? "0" + std::to_string(s) : std::to_string(s);
+
+		return hs + ":" + ms + ":" + ss;
 	}
 };
 

@@ -135,15 +135,23 @@ namespace stream
 
 	bool AudioStreamOut::onGetData(Chunk& data)
 	{
-		//int c = stream_read((void*)data.samples, LISTENERBUFFER, LISTENERBUFFER);
-		int c = stream_read(buff, LISTENERBUFFER, LISTENERBUFFER);
-		if (!c)
-			return false;
+		if (dec)
+		{
+			int s_in_bytes = dec->decode_to(sampbuf);
+			data.samples = sampbuf;
+			data.sampleCount = s_in_bytes / 2;
+			return true;
+		}
 
-		data.samples = (sf::Int16*)buff;
-		data.sampleCount = c / 2;
+		////int c = stream_read((void*)data.samples, LISTENERBUFFER, LISTENERBUFFER);
+		//int c = stream_read(buff, LISTENERBUFFER, LISTENERBUFFER);
+		//if (!c)
+		//	return false;
 
-		return true;
+		//data.samples = (sf::Int16*)buff;
+		//data.sampleCount = c / 2;
+
+		//return true;
 	}
 
 	void AudioStreamOut::onSeek(sf::Time timeOffset)
@@ -155,5 +163,10 @@ namespace stream
 	{
 		
 		initialize(channels, rate);
+	}
+
+	void AudioStreamOut::set_decoder(ops::Decoder* dec)
+	{
+		this->dec = dec;
 	}
 }
