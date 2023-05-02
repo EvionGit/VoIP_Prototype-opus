@@ -95,6 +95,11 @@ private:
 public:
 	VoIP(wsock::udpSocket& local) : sock(local), current_process(0),bitrate(128000)
 	{
+
+		local_conf.channels = 2;
+		local_conf.data_size_ms = 20;
+		local_conf.key = AUDIO_KEY;
+		local_conf.samples_rate = ops::kHz48;
 		
 		jbuffer = new jbuf::JitterBuffer(40, 0, 1000, true);
 		recorder = new stream::AudioStreamIn;
@@ -105,12 +110,8 @@ public:
 		
 		
 		enc = new ops::Encoder(ops::VOIP);
-	
-		
-
 		dec = new ops::Decoder;
-		dec->set_output_stream(listener, ops::kHz48, 2, 20);
-		
+
 		listener->set_decoder(dec);
 		
 		set_ui();
