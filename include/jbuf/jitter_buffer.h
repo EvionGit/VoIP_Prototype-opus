@@ -41,6 +41,8 @@ namespace jbuf
 		//std::deque<char*> payload_memory_pool; // pool of available memory blocks for arriving packets   
 		std::deque<AudioPacket> buffer; // jitter buffer for received data
 		std::mutex mtx; // mutex for multi-threading access
+
+		bool isFirst_packet = true;
 		uint16_t last_packet_id = 0; // order control
 
 		uint32_t buffering_time_ms; // time for buffering
@@ -58,8 +60,7 @@ namespace jbuf
 		~JitterBuffer();
 
 	public:
-		void init(uint32_t interpackets_delay_ms,uint64_t max_payload_size_bytes);
-		void reset_remote_config();
+		void reset_jitter_buffer();
 
 		int push(AudioPacket& packet, Ttimepoint arrived_time);
 		int pop(AudioPacket& packet);

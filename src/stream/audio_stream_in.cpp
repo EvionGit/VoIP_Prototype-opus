@@ -15,7 +15,13 @@ namespace stream
 		while(1)
 		{
 			mtx.lock();
-			//printf("READ: %zu\n", std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000);
+
+			if(end_of_file)
+			{
+				mtx.unlock();
+				return 0;
+			}
+			
 			/* waiting until audiobuffer < 4096 bytes */
 			if (!size)
 			{
@@ -131,4 +137,16 @@ namespace stream
 		stream_write(samples, sampleCount * 2);
 		return true;
 	};
+
+	void AudioStreamIn::onStop()
+	{
+		end_of_file = true;
+	}
+
+	bool AudioStreamIn::onStart()
+	{
+		s = e = size = 0;
+		end_of_file = false;
+		return true;
+	}
 }

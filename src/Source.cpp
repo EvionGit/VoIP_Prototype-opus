@@ -25,82 +25,24 @@
 
 
 
-//void recv_data(stream::NetStreamAudioIn& stream)
-//{
-//
-//	wsock::WSA_INIT wsa;
-//	wsock::udpSocket sock("0.0.0.0", "5555");
-//	wsock::addr remote;
-//
-//
-//	uint64_t start = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
-//	int32_t jitter = 0;
-//	int32_t d = 0;
-//
-//	int32_t last_received = 0;
-//	int32_t last_packet_timestamp = 0;
-//	int32_t avg = 0;
-//	int32_t count = 0;
-//
-//	char buff[2048];
-//
-//	long long last = 0;
-//	size_t m;
-//	while (1)
-//	{
-//		if ((m = sock._recvfrom(remote, &buff, sizeof(buff), 0)) > 0)
-//		{
-//			pack::AudioPacket* ap = (pack::AudioPacket*)buff;
-//			
-//			//printf("%u: %lli\n",ap->id, (ap->timestamp - last) / 1000000);
-//			//last = ap->timestamp;
-//
-//			//stream.stream_write(buff+sizeof(pack::AudioPacket), ap->size);
-//
-//			stream.stream_write(buff, m);
-//		}
-//
-//	}
-//	printf("END\n");
-//
-//}
-
-
-//int main()
-//{
-//	stream::AudioStreamOut aout;
-//	jbuf::JitterBuffer jb(40, 0);
-//	stream::NetStreamAudioIn ain(&jb);
-//
-//
-//	AudioListener listener(aout);
-//
-//	ops::Decoder decoder;
-//	decoder.set_input_stream(&ain, ops::kHz48, 2);
-//	decoder.set_output_stream(&aout, ops::kHz48, 2, 20);
-//
-//	
-//
-//	std::thread net_reader(recv_data, std::ref(ain));
-//
-//	listener.play();
-//
-//	decoder.decode();
-//
-//
-//
-//
-//
-//	return 0;
-//}
 
 class VoIP
 {
 private:
-	std::mutex mtx;
-	wsock::udpSocket& sock;
-	wsock::addr* remote;
 
+	
+	std::mutex mtx;
+	
+	/* local metadata */
+	wsock::udpSocket& sock;
+	pack::AudioConfigPacket local_conf;
+	uint32_t bitrate;
+
+	/* companion`s metadata */
+	wsock::addr* remote;
+	pack::AudioConfigPacket remote_conf;
+
+	/* base streaming and decoding pointers */
 	jbuf::JitterBuffer* jbuffer;
 	ops::Decoder* dec;
 	ops::Encoder* enc;
@@ -109,14 +51,13 @@ private:
 	stream::NetStreamAudioIn* receiver;
 	stream::NetStreamAudioOut* sender;
 
-	pack::AudioConfigPacket aconf;
-
+	/* conversation timer */
 	std::chrono::high_resolution_clock::time_point start_process;
 	long long current_process;
 
 private:
-	ImVec2 wcallto_pos;
-	ImVec2 wcallto_size;
+	ImVec2 window_pos;
+	ImVec2 window_size;
 
 	ImGuiWindowFlags wcallto;
 	ImGuiInputTextFlags remote_ip_flags;
@@ -152,25 +93,26 @@ private:
 	bool isSpeaking;
 
 public:
-	VoIP(wsock::udpSocket& local) : sock(local), current_process(0)
+	VoIP(wsock::udpSocket& local) : sock(local), current_process(0),bitrate(128000)
 	{
 		
-		jbuffer = new jbuf::JitterBuffer(40, 0, 100, true);
+		jbuffer = new jbuf::JitterBuffer(40, 0, 1000, true);
 		recorder = new stream::AudioStreamIn;
 		listener = new stream::AudioStreamOut;
-		receiver = new stream::NetStreamAudioIn(jbuffer);
+		receiver = new stream::NetStreamAudioIn;
+		//sender = new stream::NetStreamAudioOut - init when calling or accepting incoming;
+		
 		
 		
 		enc = new ops::Encoder(ops::VOIP);
-		enc->set_input_stream(recorder, ops::kHz48, 2, 20);
+	
 		
-		// enc->set_output - when connected
-		enc->set_bitrate(128000);
 
 		dec = new ops::Decoder;
-		
-		// dec->set_input - when connected
 		dec->set_output_stream(listener, ops::kHz48, 2, 20);
+		
+		listener->set_decoder(dec);
+		
 		set_ui();
 
 		std::thread recv_data(&VoIP::multiplex,this);
@@ -210,8 +152,9 @@ public:
 			if ((m = sock._recvfrom(from, buff, sizeof(buff), 0)) > 0)
 			{
 				
-				if (*(uint8_t*)buff == AUDIO_PACKET_TYPE)
+				if (*(int8_t*)buff == AUDIO_PACKET_TYPE)
 				{
+				
 					if (inProcessing)
 						receiver->stream_write(buff, m);
 				}
@@ -241,7 +184,7 @@ public:
 								remote = new wsock::addr(from);
 
 							isIncoming = true;
-							aconf = *conf;
+							remote_conf = *conf;
 						}
 					
 					}
@@ -254,11 +197,11 @@ public:
 						}
 						
 					}
-					else if(conf->packet_type = CONF_ACCEPT_TYPE)
+					else if(conf->packet_type == CONF_ACCEPT_TYPE)
 					{
 						if (isCalling && from._get_straddr() == remote->_get_straddr())
 						{
-							aconf = *conf;
+							remote_conf = *conf;
 							accept_to();
 							
 						}
@@ -285,11 +228,8 @@ public:
 		/* init outcoming call */
 		if (!isIncoming)
 		{
-			aconf.samples_rate = 48000;
-			aconf.data_size_ms = 20;
-			aconf.channels = 2;
-			aconf.key = AUDIO_KEY;
-			aconf.packet_type = CONF_CONNECTION_TYPE;
+			local_conf.packet_type = CONF_CONNECTION_TYPE;
+			
 
 			if (remote)
 				delete remote;
@@ -303,56 +243,29 @@ public:
 			
 
 			isCalling = true;
-			printf("INIT CALL\n");
 			
 		}
 		/* accept incoming call */
 		else
 		{
-			printf("ACCEPT CALL\n");
-			switch (aconf.samples_rate)
-			{
-			case 8000:
-				dec->set_input_stream(receiver, ops::kHz8, aconf.channels);
-				listener->set_listener_conf(8000, aconf.channels);
-				break;
-			case 12000:
-				dec->set_input_stream(receiver, ops::kHz12, aconf.channels);
-				break;
-			case 24000:
-				dec->set_input_stream(receiver, ops::kHz24, aconf.channels);
-				break;
-			case 48000:
-				dec->set_input_stream(receiver, ops::kHz48, aconf.channels);
-				break;
-			default:
-				dec->set_input_stream(receiver, ops::kHz48, aconf.channels);
-				break;
-			}
-
 			if (sender)
 				delete sender;
-			sender = new stream::NetStreamAudioOut(sock, *remote, 20);
 
-			enc->set_output_stream(sender, ops::kHz48, 2);
+			sender = new stream::NetStreamAudioOut(sock, *remote, local_conf.data_size_ms);
 
-			
-	
-			aconf.samples_rate = 48000;
-			aconf.data_size_ms = 20;
-			aconf.channels = 2;
-			aconf.key = AUDIO_KEY;
-			aconf.packet_type = CONF_ACCEPT_TYPE;
+			local_conf.packet_type = CONF_ACCEPT_TYPE;
 
 			isIncoming = false;
 			inProcessing = true;
 			start_process = std::chrono::high_resolution_clock::now();
 
+			start_listen_process();
+
 		}
 		
 		
 		callref = call+1;
-		sock._sendto(*remote, &aconf, sizeof(aconf));
+		sock._sendto(*remote, &local_conf, sizeof(local_conf));
 		
 		return 1;
 	}
@@ -361,36 +274,18 @@ public:
 	{
 		std::lock_guard<std::mutex> lock(mtx);
 
-		switch (aconf.samples_rate)
-		{
-		case 8000:
-			dec->set_input_stream(receiver, ops::kHz8, aconf.channels);
-			listener->set_listener_conf(8000, aconf.channels);
-			break;
-		case 12000:
-			dec->set_input_stream(receiver, ops::kHz12, aconf.channels);
-			break;
-		case 24000:
-			dec->set_input_stream(receiver, ops::kHz24, aconf.channels);
-			break;
-		case 48000:
-			dec->set_input_stream(receiver, ops::kHz48, aconf.channels);
-			break;
-		default:
-			dec->set_input_stream(receiver, ops::kHz48, aconf.channels);
-			break;
-		}
-
+		
 		if (sender)
 			delete sender;
-		sender = new stream::NetStreamAudioOut(sock, *remote, 20);
+		sender = new stream::NetStreamAudioOut(sock, *remote, local_conf.data_size_ms);
 
-		enc->set_output_stream(sender, ops::kHz48, 2);
+		
 
 
 		isIncoming = false;
 		inProcessing = true;
 		start_process = std::chrono::high_resolution_clock::now();
+		start_listen_process();
 		
 
 		return 1;
@@ -399,20 +294,23 @@ public:
 	int abort_to()
 	{
 		std::lock_guard<std::mutex> lock(mtx);
+		
+		if (inProcessing)
+		{
+			end_listen_process();
+		}
+			
 
 		isCalling = false;
 		inProcessing = false;
 		isIncoming = false;
+		
 
-		aconf.packet_type = CONF_ABORTING_TYPE;
+		local_conf.packet_type = CONF_ABORTING_TYPE;
 
-		sock._sendto(*remote, &aconf, sizeof(aconf));
-		delete remote;
-		remote = 0;
-
-
+		sock._sendto(*remote, &local_conf, sizeof(local_conf));
+	
 		callref = call;
-		printf("ABORT\n");
 		return 1;
 	}
 
@@ -420,8 +318,8 @@ public:
 	
 	void set_ui()
 	{
-		wcallto_pos = ImVec2(0, 0);
-		wcallto_size = ImVec2(800, 800);
+		window_pos = ImVec2(0, 0);
+		window_size = ImVec2(800, 800);
 
 
 		wcallto |= ImGuiWindowFlags_NoResize;
@@ -469,8 +367,8 @@ public:
 	{
 		if (isIncoming && ImGui::Begin("incoming_win",0, wcallto))
 		{
-			ImGui::SetWindowPos("incoming_win", wcallto_pos);
-			ImGui::SetWindowSize("incoming_win", wcallto_size);
+			ImGui::SetWindowPos("incoming_win", window_pos);
+			ImGui::SetWindowSize("incoming_win", window_size);
 
 			ImGui::SetWindowFontScale(3);
 			ImGui::SetCursorPos(ImVec2(200, 250));
@@ -518,8 +416,8 @@ public:
 				current_process = (std::chrono::high_resolution_clock::now().time_since_epoch().count()
 									- start_process.time_since_epoch().count()) / 1000000000;
 
-				ImGui::SetWindowPos("process_win", wcallto_pos);
-				ImGui::SetWindowSize("process_win", wcallto_size);
+				ImGui::SetWindowPos("process_win", window_pos);
+				ImGui::SetWindowSize("process_win", window_size);
 
 				
 				ImGui::SetCursorPos(ImVec2(200, 150));
@@ -546,8 +444,8 @@ public:
 			else if (!isCalling && ImGui::Begin("callto_win", 0, wcallto))
 			{
 
-				ImGui::SetWindowPos("callto_win", wcallto_pos);
-				ImGui::SetWindowSize("callto_win", wcallto_size);
+				ImGui::SetWindowPos("callto_win", window_pos);
+				ImGui::SetWindowSize("callto_win", window_size);
 
 				/* ip label */
 				ImGui::SetWindowFontScale(2);
@@ -593,8 +491,8 @@ public:
 
 			else if (isCalling && ImGui::Begin("calling_win", 0, wcallto))
 			{
-				ImGui::SetWindowPos("calling_win", wcallto_pos);
-				ImGui::SetWindowSize("calling_win", wcallto_size);
+				ImGui::SetWindowPos("calling_win", window_pos);
+				ImGui::SetWindowSize("calling_win", window_size);
 
 
 				ImGui::SetWindowFontScale(3);
@@ -635,9 +533,16 @@ public:
 				if (ImGui::ImageButton(*speakref, ImVec2(60, 60)))
 				{
 					if (!isSpeaking)
+					{
 						speakref = speak;
+						start_listen_process();
+					}
+						
 					else
+					{
 						speakref = speak + 1;
+						end_listen_process();
+					}
 
 
 					isSpeaking = !isSpeaking;
@@ -668,14 +573,35 @@ public:
 
 	}
 
-	void start_data_process()
+	void start_record_process()
 	{
-		// t1 - encoder , t2 - recorder, t3? - sender
-		// t5 - listener
-		listener->play();
+		
+		enc->set_bitrate(bitrate);
+		enc->set_input_stream(recorder, local_conf.samples_rate, local_conf.channels, local_conf.data_size_ms);
+		enc->set_output_stream(sender);
+		recorder->setChannelCount(local_conf.channels);
+		recorder->start(local_conf.samples_rate);
+		enc->thread_encode();
+		
 	}
 
-	void end_data_process()
+	void stop_record_process()
+	{
+		recorder->stop();
+	}
+
+	void start_listen_process()
+	{
+
+		receiver->reset_jitter_buffer();
+		dec->set_input_stream(receiver);
+		listener->set_listener_conf(remote_conf.samples_rate, remote_conf.channels);
+		
+		listener->play();
+
+	}
+
+	void end_listen_process()
 	{
 		listener->stop();
 	}

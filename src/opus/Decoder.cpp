@@ -77,12 +77,8 @@ READER:
 		return 0;
 	}
 
-	void Decoder::set_input_stream(Stream* in, OPUS_SAMPLES_RATE rate, int32_t channels)
+	void Decoder::set_input_stream(Stream* in)
 	{
-		input = in;
-		irate = rate == DEFAULT ? 48000 : rate;
-		ichannels = channels;
-
 		if (ichunk)
 			delete[] ichunk;
 

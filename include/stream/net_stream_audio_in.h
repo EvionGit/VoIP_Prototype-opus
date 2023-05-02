@@ -16,7 +16,7 @@ namespace stream
 		jbuf::JitterBuffer* jb;
 
 	public:
-		NetStreamAudioIn(jbuf::JitterBuffer* jitter_buffer);
+		NetStreamAudioIn();
 
 
 	public:
@@ -25,6 +25,9 @@ namespace stream
 
 		/* Protocol writes data to the buffer */
 		virtual size_t stream_write(const void* frombuffer, size_t writesize) override;
+
+		void set_jitter_buffer(jbuf::JitterBuffer* jitter_buffer);
+		void reset_jitter_buffer();
 
 	};
 }

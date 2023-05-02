@@ -49,12 +49,8 @@ namespace ops
 		
 	}
 
-	void Encoder::set_output_stream(Stream* out, OPUS_SAMPLES_RATE rate, int32_t channels)
+	void Encoder::set_output_stream(Stream* out)
 	{
-		output = out;
-		orate = rate == DEFAULT ? 48000 : rate;
-		ochannels = channels;
-
 		if (ochunk)
 			delete[] ochunk;
 
@@ -82,6 +78,12 @@ namespace ops
 			this->bitrate = bitrate;
 		}
 
+	}
+
+	void Encoder::thread_encode()
+	{
+		std::thread t1(&Encoder::encode, this);
+		t1.detach();
 	}
 
 	int Encoder::encode()

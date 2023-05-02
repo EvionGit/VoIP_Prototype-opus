@@ -14,6 +14,7 @@ namespace stream
 	{
 	private:
 		std::mutex mtx;
+		bool end_of_file = true;
 
 		/* in this case the buffer is cycle*/
 		char audiobuffer[AUDIOBUFF];
@@ -34,6 +35,10 @@ namespace stream
 
 		/* sound recorder override */
 		virtual bool onProcessSamples(const sf::Int16* samples, size_t sampleCount) override;
+
+	private:
+		virtual bool onStart() override;
+		virtual void onStop() override;
 
 	};
 }

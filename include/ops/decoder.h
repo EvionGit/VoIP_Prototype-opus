@@ -37,7 +37,7 @@ namespace ops
 	public:
 		int decode();
 		int decode_to(int16_t* samples);
-		void set_input_stream(Stream* in, OPUS_SAMPLES_RATE rate, int32_t channels);
+		void set_input_stream(Stream* in);
 		void set_output_stream(Stream* out, OPUS_SAMPLES_RATE rate, int32_t channels,int32_t ms);
 
 
