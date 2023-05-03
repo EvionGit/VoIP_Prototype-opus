@@ -13,8 +13,8 @@ namespace stream
 
 
 	public:
-		virtual size_t stream_read(void* tobuffer, size_t buffersize, size_t readamount) override;
-		virtual size_t stream_write(const void* frombuffer, size_t writesize) override;
+		virtual int64_t stream_read(void* tobuffer, int64_t buffersize, int64_t readamount) override;
+		virtual int64_t stream_write(const void* frombuffer, int64_t writesize) override;
 
 	public:
 		/* Returns current position in a stream */

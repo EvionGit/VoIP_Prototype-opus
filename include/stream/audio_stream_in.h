@@ -29,10 +29,10 @@ namespace stream
 
 	public:
 		/* Encoder reads data from the buffer */
-		virtual size_t stream_read(void* tobuffer, size_t buffersize, size_t readamount) override;
+		virtual int64_t stream_read(void* tobuffer, int64_t buffersize, int64_t readamount) override;
 
 		/* App writes data to the buffer */
-		virtual size_t stream_write(const void* frombuffer, size_t writesize) override;
+		virtual int64_t stream_write(const void* frombuffer, int64_t writesize) override;
 
 		/* sound recorder override */
 		virtual bool onProcessSamples(const sf::Int16* samples, size_t sampleCount) override;

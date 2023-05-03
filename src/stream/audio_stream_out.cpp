@@ -10,12 +10,12 @@ namespace stream
 
 	AudioStreamOut::~AudioStreamOut() {}
 
-	size_t AudioStreamOut::stream_read(void* tobuffer, size_t buffersize, size_t readamount)
+	int64_t AudioStreamOut::stream_read(void* tobuffer, int64_t buffersize, int64_t readamount)
 	{
 		return 0;
 	}
 
-	size_t AudioStreamOut::stream_write(const void* frombuffer, size_t writesize)
+	int64_t AudioStreamOut::stream_write(const void* frombuffer, int64_t writesize)
 	{
 		return 0;
 	}
@@ -24,11 +24,22 @@ namespace stream
 	{
 		if (dec)
 		{
-			int s_in_bytes = dec->decode_to(sampbuf);
+		
+			int s_in_bytes;
+			while ((s_in_bytes = dec->decode_to(sampbuf)) == 0 && reading) {}
+
+			if(!s_in_bytes && !reading)
+			{
+				return false;
+			}
+			
+				
+
 			data.samples = sampbuf;
 			data.sampleCount = s_in_bytes / 2;
 			return true;
 		}
+		return false;
 	}
 
 	void AudioStreamOut::onSeek(sf::Time timeOffset)
@@ -44,5 +55,17 @@ namespace stream
 	void AudioStreamOut::set_decoder(ops::Decoder* dec)
 	{
 		this->dec = dec;
+	}
+
+	void AudioStreamOut::_play()
+	{
+		reading = true;
+		this->play();
+	}
+
+	void AudioStreamOut::_stop()
+	{
+		reading = false;
+		this->stop();
 	}
 }

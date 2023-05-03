@@ -168,14 +168,12 @@ namespace jbuf
 
 		if (is_buffering)
 		{
-
 			return JBUFFERING;
 		}
 
 
 		else if (buffer.empty())
 		{
-			printf("NODATA\n");
 			is_buffering = true;
 			return JNODATA;
 		}

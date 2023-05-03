@@ -112,7 +112,9 @@ public:
 		enc = new ops::Encoder(ops::VOIP);
 		dec = new ops::Decoder;
 
+		receiver->set_jitter_buffer(jbuffer);
 		listener->set_decoder(dec);
+		//listener->set_listener_conf(48000, 2);
 		
 		set_ui();
 
@@ -155,7 +157,7 @@ public:
 				
 				if (*(int8_t*)buff == AUDIO_PACKET_TYPE)
 				{
-				
+					
 					if (inProcessing)
 						receiver->stream_write(buff, m);
 				}
@@ -194,6 +196,7 @@ public:
 					{
 						if((isIncoming || inProcessing || isCalling) && from._get_straddr() == remote->_get_straddr())
 						{
+							printf("ABORTING\n");
 							abort_to();
 						}
 						
@@ -283,9 +286,6 @@ public:
 		sender = new stream::NetStreamAudioOut(sock, *remote, local_conf.data_size_ms);
 
 
-		
-
-
 		isIncoming = false;
 		inProcessing = true;
 		start_process = std::chrono::high_resolution_clock::now();
@@ -302,11 +302,6 @@ public:
 	{
 		std::lock_guard<std::mutex> lock(mtx);
 		
-		if (inProcessing)
-		{
-			stop_listen_process();
-		}
-			
 
 		if (inProcessing)
 		{
@@ -612,18 +607,18 @@ public:
 	void start_listen_process()
 	{
 
-		receiver->set_jitter_buffer(jbuffer);
 		receiver->reset_jitter_buffer();
 		dec->set_input_stream(receiver);
 		listener->set_listener_conf(remote_conf.samples_rate, remote_conf.channels);
+		dec->set_output_stream(listener,remote_conf.samples_rate,remote_conf.channels,remote_conf.data_size_ms);
 		
-		listener->play();
+		listener->_play();
 
 	}
 
 	void stop_listen_process()
 	{
-		recorder->stop();
+		listener->_stop();
 	}
 
 	std::string get_clock(long long time_in_sec)

@@ -7,7 +7,9 @@
 #define OPS_BAD_FRAMESIZE -300
 #define OPS_INPUT_STREAM_NOT_FOUND -400
 #define OPS_OUTPUT_STREAM_NOT_FOUND -401
+
 #define OPS_LOST_PACKET -2
+#define OPS_NODATA -3
 
 #include <opus/opus.h>
 #include <stream/stream.h>

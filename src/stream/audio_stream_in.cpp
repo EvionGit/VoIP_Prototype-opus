@@ -15,7 +15,7 @@ namespace stream
 		
 	}
 
-	size_t AudioStreamIn::stream_read(void* tobuffer, size_t buffersize, size_t readamount)
+	int64_t AudioStreamIn::stream_read(void* tobuffer, int64_t buffersize, int64_t readamount)
 	{
 		while(1)
 		{
@@ -28,13 +28,6 @@ namespace stream
 				return 0;
 			}
 			
-			/* waiting until audiobuffer < 4096 bytes */
-			if (!size)
-			{
-				mtx.unlock();
-				return 0;
-				
-			}
 			
 	
 			/* waiting until audiobuffer < 4096 bytes */
@@ -110,7 +103,7 @@ namespace stream
 		
 	}
 
-	size_t AudioStreamIn::stream_write(const void* frombuffer, size_t writesize)
+	int64_t AudioStreamIn::stream_write(const void* frombuffer, int64_t writesize)
 	{
 		std::lock_guard<std::mutex> lock(mtx);
 		//printf("GET: %zu - ",writesize);

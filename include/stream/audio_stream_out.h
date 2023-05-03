@@ -10,10 +10,10 @@
 
 namespace stream
 {
-	class AudioStreamOut : public Stream, public sf::SoundStream
+	class AudioStreamOut : public Stream, protected sf::SoundStream
 	{
 	private:
-
+		bool reading;
 		ops::Decoder* dec;
 		int16_t sampbuf[LISTENERBUFFER];
 
@@ -24,20 +24,27 @@ namespace stream
 
 	public:
 		/* stream plug */
-		virtual size_t stream_read(void* tobuffer, size_t buffersize, size_t readamount) override;
+		virtual int64_t stream_read(void* tobuffer, int64_t buffersize, int64_t readamount) override;
 
 		/* stream plug */
-		virtual size_t stream_write(const void* frombuffer, size_t writesize) override;
+		virtual int64_t stream_write(const void* frombuffer, int64_t writesize) override;
 
+		void set_listener_conf(uint32_t rate, uint8_t channels);
+
+		void set_decoder(ops::Decoder* dec);
+
+		void _play();
+
+		void _stop();
+
+	private:
 		/**/
 		virtual bool onGetData(Chunk& data) override;
 
 		/**/
 		virtual void onSeek(sf::Time timeOffset) override;
 
-		void set_listener_conf(uint32_t rate, uint8_t channels);
-
-		void set_decoder(ops::Decoder* dec);
+	
 
 
 	};

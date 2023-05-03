@@ -46,22 +46,24 @@ namespace ops
 			delete[] ichunk;
 
 		ichunk = new int16_t[ichunk_size];
+
+		if (enc)
+			opus_encoder_destroy(enc);
+
+		enc = opus_encoder_create(irate, ichannels, opus_type, &errorcode);
 		
 	}
 
 	void Encoder::set_output_stream(Stream* out)
 	{
-
+		output = out;
 
 		if (ochunk)
 			delete[] ochunk;
 
 		ochunk = new unsigned char[4000];
 
-		if(enc)
-			opus_encoder_destroy(enc);
-
-		enc = opus_encoder_create(orate, ochannels, opus_type, &errorcode);
+		
 		
 	}
 
@@ -89,11 +91,7 @@ namespace ops
 
 	}
 
-	void Encoder::thread_encode()
-	{
-		std::thread t1(&Encoder::encode, this);
-		t1.detach();
-	}
+	
 
 	int Encoder::encode()
 	{

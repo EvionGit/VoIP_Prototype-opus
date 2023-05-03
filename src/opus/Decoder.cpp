@@ -30,7 +30,6 @@ namespace ops
 			return errorcode;
 
 		int read = input->stream_read(ichunk, 4000, 4000);
-
 		if (read == OPS_LOST_PACKET)
 		{
 			int r = opus_decode(dec, 0, read, ochunk, ochunk_size / 2, 0);
@@ -81,16 +80,13 @@ READER:
 
 	void Decoder::set_input_stream(Stream* in)
 	{
+		input = in;
 		if (ichunk)
 			delete[] ichunk;
 
 		ichunk = new unsigned char[4000];
 
-		if (dec)
-			opus_decoder_destroy(dec);
-
-
-		dec = opus_decoder_create(irate, ichannels, &errorcode);
+	
 	}
 
 	void Decoder::set_output_stream(Stream* out, OPUS_SAMPLES_RATE rate, int32_t channels, int32_t ms)
@@ -105,5 +101,11 @@ READER:
 			delete[] ochunk;
 
 		ochunk = new int16_t[ochunk_size];
+
+		if (dec)
+			opus_decoder_destroy(dec);
+
+
+		dec = opus_decoder_create(orate, ochannels, &errorcode);
 	}
 }

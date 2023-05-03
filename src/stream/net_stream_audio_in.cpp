@@ -7,34 +7,39 @@ namespace stream
 		
 	}
 
-	size_t NetStreamAudioIn::stream_read(void* tobuffer, size_t buffersize, size_t readamount) 
+	int64_t NetStreamAudioIn::stream_read(void* tobuffer, int64_t buffersize, int64_t readamount)
 	{
+		
 		if (jb)
 		{
+			
 			AudioPacket ap;
 			int stat = 0;
-			while ((stat = jb->pop(ap)) != JSUCCESS)
+			if((stat = jb->pop(ap)) == JSUCCESS)
 			{
-				if (stat == JLOSTPACKET)
-				{
-					//printf("--LOSTPACKET\n");
-					return -2;
-				}
-
-				//std::this_thread::sleep_for(std::chrono::milliseconds(20));
+			
+				memcpy(tobuffer, ap.data, ap.size);
+				return ap.size;
 			}
-
-
-			memcpy(tobuffer, ap.data, ap.size);
-			return ap.size;
+			else if (stat == JLOSTPACKET)
+			{
+			
+				return -2;
+			}
+			else if (stat == JBUFFERING ||  stat == JNODATA)
+			{
+				
+				return -3;
+			}
+	
 		}
 		
 		return 0;
 
 	}
-	size_t NetStreamAudioIn::stream_write(const void* frombuffer, size_t writesize)
+	int64_t NetStreamAudioIn::stream_write(const void* frombuffer, int64_t writesize)
 	{
-
+		
 		if (jb)
 		{
 			AudioPacket* ap = (AudioPacket*)frombuffer;
@@ -53,11 +58,12 @@ namespace stream
 
 	void NetStreamAudioIn::set_jitter_buffer(jbuf::JitterBuffer* jitter_buffer)
 	{
+	
 		if(jb)
 		{
-			delete jb;
-			jb = jitter_buffer;
+			delete jb;	
 		}
+		jb = jitter_buffer;
 	}
 
 	void NetStreamAudioIn::reset_jitter_buffer()

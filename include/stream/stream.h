@@ -17,10 +17,10 @@ namespace stream
 
 	public:
 		/*  */
-		virtual size_t stream_read(void* tobuffer, size_t buffersize, size_t readamount) = 0;
+		virtual int64_t stream_read(void* tobuffer, int64_t buffersize, int64_t readamount) = 0;
 
 		/*  */
-		virtual size_t stream_write(const void* frombuffer, size_t writesize) = 0;
+		virtual int64_t stream_write(const void* frombuffer, int64_t writesize) = 0;
 
 
 	};

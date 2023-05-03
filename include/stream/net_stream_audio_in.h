@@ -12,7 +12,7 @@ namespace stream
 	class NetStreamAudioIn : public Stream
 	{
 	private:
-		
+		std::mutex mtx;
 		jbuf::JitterBuffer* jb;
 
 	public:
@@ -21,10 +21,10 @@ namespace stream
 
 	public:
 		/* Decoder reads data from the buffer */
-		virtual size_t stream_read(void* tobuffer, size_t buffersize, size_t readamount) override;
+		virtual int64_t stream_read(void* tobuffer, int64_t buffersize, int64_t readamount) override;
 
 		/* Protocol writes data to the buffer */
-		virtual size_t stream_write(const void* frombuffer, size_t writesize) override;
+		virtual int64_t stream_write(const void* frombuffer, int64_t writesize) override;
 
 		void set_jitter_buffer(jbuf::JitterBuffer* jitter_buffer);
 		void reset_jitter_buffer();
