@@ -12,7 +12,7 @@ namespace stream
 
 	AudioStreamIn::~AudioStreamIn()
 	{
-		
+		stop();
 	}
 
 	int64_t AudioStreamIn::stream_read(void* tobuffer, int64_t buffersize, int64_t readamount)

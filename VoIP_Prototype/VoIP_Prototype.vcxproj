@@ -144,6 +144,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\imgui\imgui_mic_dropdown.cpp" />
     <ClCompile Include="..\src\jbuf\jitter_buffer.cpp" />
     <ClCompile Include="..\src\opus\Decoder.cpp" />
     <ClCompile Include="..\src\opus\Encoder.cpp" />
@@ -165,6 +166,7 @@
     <ClCompile Include="imgui\imgui_widgets.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\imgui\imgui_mic_dropdown.h" />
     <ClInclude Include="..\include\pack\audio_packet.h" />
     <ClInclude Include="..\include\pack\config_packet.h" />
     <ClInclude Include="..\include\stream\net_stream_audio_out.h" />

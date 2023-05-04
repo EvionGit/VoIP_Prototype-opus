@@ -8,7 +8,10 @@ namespace stream
 		memset(sampbuf, 0, LISTENERBUFFER);
 	}
 
-	AudioStreamOut::~AudioStreamOut() {}
+	AudioStreamOut::~AudioStreamOut()
+	{
+		_stop();
+	}
 
 	int64_t AudioStreamOut::stream_read(void* tobuffer, int64_t buffersize, int64_t readamount)
 	{

@@ -22,6 +22,7 @@
 
 #include "imgui.h"
 #include "imgui-SFML.h"
+#include "imgui_mic_dropdown.h"
 
 
 
@@ -56,9 +57,12 @@ private:
 	long long current_process;
 
 private:
+	ImGui::MicDropDown* mic_dropdown;
+
 	ImVec2 window_pos;
 	ImVec2 window_size;
 
+	ImGuiWindowFlags wdropdown;
 	ImGuiWindowFlags wcallto;
 	ImGuiInputTextFlags remote_ip_flags;
 
@@ -81,7 +85,14 @@ private:
 	sf::Texture call[2];
 	sf::Texture* callref;
 
+	sf::Texture settings;
+
 	sf::Texture process;
+
+	std::map<std::string, int> settings_map;
+	std::vector<std::string> input_devices;
+	char** short_input_devices;
+	int c = 0;
 
 	/* main window state */
 	bool isCalling;
@@ -92,21 +103,24 @@ private:
 	bool isMuting;
 	bool isSpeaking;
 
+	bool isSettingUp;
+
 public:
 	VoIP(wsock::udpSocket& local) : sock(local), current_process(0),bitrate(128000)
 	{
+		//settings_map["micro"] = 0;
 
 		local_conf.channels = 2;
 		local_conf.data_size_ms = 20;
 		local_conf.key = AUDIO_KEY;
 		local_conf.samples_rate = ops::kHz48;
 		
-		jbuffer = new jbuf::JitterBuffer(40, 0, 1000, true);
+		jbuffer = new jbuf::JitterBuffer(40,0,200);
 		recorder = new stream::AudioStreamIn;
 		listener = new stream::AudioStreamOut;
 		receiver = new stream::NetStreamAudioIn;
 		//sender = new stream::NetStreamAudioOut - init when calling or accepting incoming;
-		
+		mic_dropdown = new ImGui::MicDropDown(recorder);
 		
 		
 		enc = new ops::Encoder(ops::VOIP);
@@ -117,7 +131,7 @@ public:
 		//listener->set_listener_conf(48000, 2);
 		
 		set_ui();
-
+		
 		std::thread recv_data(&VoIP::multiplex,this);
 		recv_data.detach();
 
@@ -139,6 +153,8 @@ public:
 			delete listener;
 		if (jbuffer)
 			delete jbuffer;
+		if (mic_dropdown)
+			delete mic_dropdown;
 	}
 
 
@@ -328,6 +344,9 @@ public:
 		window_pos = ImVec2(0, 0);
 		window_size = ImVec2(800, 800);
 
+		wdropdown |= ImGuiWindowFlags_NoResize;
+		wdropdown |= ImGuiWindowFlags_NoMove;
+	
 
 		wcallto |= ImGuiWindowFlags_NoResize;
 		wcallto |= ImGuiWindowFlags_NoTitleBar;
@@ -361,6 +380,8 @@ public:
 		call[1].loadFromFile("..\\img\\endcall.png");
 		callref = call;
 
+		settings.loadFromFile("..\\img\\settings.png");
+
 		process.loadFromFile("..\\img\\process.png");
 
 		isCalling = false;
@@ -368,10 +389,40 @@ public:
 		isIncoming = false;
 		isMuting = false;
 		isSpeaking = true;
+		isSettingUp = false;
+	}
+
+	void load_settings()
+	{
+		/* loads microphones */
+		if (short_input_devices)
+		{
+			for (int i = 0; i < input_devices.size(); i++)
+			{
+				delete[] short_input_devices[i];
+			}
+			delete[] short_input_devices;
+		}
+
+		input_devices = recorder->getAvailableDevices();
+		short_input_devices = new char*[input_devices.size()];
+
+		for(int i = 0; i < input_devices.size(); i++)
+		{
+			int s = input_devices[i].find('(') + 1;
+			int e = input_devices[i].find(')');
+		
+			short_input_devices[i] = new char[e - s + 1];
+			memcpy(short_input_devices[i], input_devices[i].substr(s, e - s).c_str(), e - s + 1);
+			
+		}
+
+			
 	}
 
 	void controller()
 	{
+
 		if (isIncoming && ImGui::Begin("incoming_win",0, wcallto))
 		{
 			ImGui::SetWindowPos("incoming_win", window_pos);
@@ -389,6 +440,7 @@ public:
 			mtx.unlock();
 
 			/* btns window */
+			
 			if (ImGui::Begin("incoming_btns_win", 0, wbtns))
 			{
 				ImGui::SetWindowPos("incoming_btns_win", wbtns_pos);
@@ -419,6 +471,7 @@ public:
 		{
 			if (inProcessing && ImGui::Begin("process_win",0,wcallto))
 			{
+				check_microphone();
 
 				current_process = (std::chrono::high_resolution_clock::now().time_since_epoch().count()
 									- start_process.time_since_epoch().count()) / 1000000000;
@@ -516,6 +569,27 @@ public:
 				ImGui::End();
 			}
 
+			/* settings window */
+			if (isSettingUp && ImGui::Begin("settitng_win", 0, wcallto))
+			{
+				ImGui::SetWindowPos("settitng_win", window_pos);
+				ImGui::SetWindowSize("settitng_win", window_size);
+
+				/*ImGui::SetCursorPos(ImVec2(ImGui::GetWindowPos().x + 150, ImGui::GetWindowPos().x + 70));
+				ImGui::LabelText("##", "%s", recorder->getDevice().c_str());*/
+				ImGui::SetWindowFontScale(3);
+				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowPos().x + 150, ImGui::GetWindowPos().x + 70));
+				mic_dropdown->render();
+				
+				
+			
+
+				
+				
+				
+				ImGui::End();
+			}
+
 			/* btns window */
 			if (ImGui::Begin("btns_win", 0, wbtns))
 			{
@@ -578,12 +652,37 @@ public:
 				
 				}
 
+				/* settings */
+				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowPos().x + 500, ImGui::GetWindowPos().x + 70));
+				if (ImGui::ImageButton(settings, ImVec2(60, 60)))
+				{
+					if(!isSettingUp)
+						load_settings();
+					
+					isSettingUp = !isSettingUp;
+
+				}
+
 
 				ImGui::End();
 			}
 
 		}
 
+	}
+
+	void check_microphone()
+	{
+		std::vector<std::string> devs = recorder->getAvailableDevices();
+		for (auto it = devs.begin(); it!= devs.end();it++)
+		{
+			if (recorder->getDevice() == *it)
+				return;
+		}
+
+		stop_record_process();
+		printf("SWITCH\n");
+		start_record_process;
 	}
 
 	void start_record_process()
@@ -690,5 +789,8 @@ int main()
 
 	ImGui::SFML::Shutdown();
 
+
 	return 0;
+
+
 }

@@ -90,6 +90,7 @@ namespace jbuf
 		else if (current_buffer_size_ms >= max_jitter_ms) // circular overflow
 		{
 			printf("OVERFLOW\n");
+			last_packet_id++;
 			current_buffer_size_ms -= buffer.front().data_in_ms;
 			delete[] buffer.front().data;
 			buffer.pop_front();
