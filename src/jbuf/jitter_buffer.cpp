@@ -81,7 +81,6 @@ namespace jbuf
 
 		calculate_jitter(packet, arrived_time);
 
-		printf("cur: %u\n", current_buffer_size_ms);
 		if (!is_circular)
 		{
 			return JFULLSTACK;

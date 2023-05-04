@@ -27,8 +27,7 @@ namespace stream
 				mtx.unlock();
 				return 0;
 			}
-			
-			
+
 	
 			/* waiting until audiobuffer < 4096 bytes */
 			if (size < readamount)
@@ -106,8 +105,7 @@ namespace stream
 	int64_t AudioStreamIn::stream_write(const void* frombuffer, int64_t writesize)
 	{
 		std::lock_guard<std::mutex> lock(mtx);
-		//printf("GET: %zu - ",writesize);
-		//printf("%zu\n", std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000);
+		
 		/*
 			check can we place data without trasition at the beginning
 			( look at the comment in STREAM_READER method -> )
@@ -142,9 +140,7 @@ namespace stream
 
 	bool AudioStreamIn::onProcessSamples(const sf::Int16* samples, size_t sampleCount)
 	{
-		printf("RECORDED\n");
-		/*printf("%lli\n", (std::chrono::high_resolution_clock::now().time_since_epoch().count() - last) / 1000000);
-		last = std::chrono::high_resolution_clock::now().time_since_epoch().count();*/
+	
 		stream_write(samples, sampleCount * 2);
 		return true;
 	};

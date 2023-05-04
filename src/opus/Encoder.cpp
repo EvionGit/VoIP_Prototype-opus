@@ -131,7 +131,7 @@ namespace ops
 
 		}
 
-		printf("CLOSE ENCODE\n");
+
 		CloseHandle(send_event);
 		return 0;
 

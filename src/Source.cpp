@@ -128,7 +128,7 @@ public:
 
 		receiver->set_jitter_buffer(jbuffer);
 		listener->set_decoder(dec);
-		//listener->set_listener_conf(48000, 2);
+		
 		
 		set_ui();
 		
@@ -280,9 +280,10 @@ public:
 			inProcessing = true;
 			start_process = std::chrono::high_resolution_clock::now();
 			
-
-			start_record_process();
-			start_listen_process();
+			if(!isMuting)
+				start_record_process();
+			if (isSpeaking)
+				start_listen_process();
 
 		}
 		
@@ -306,9 +307,10 @@ public:
 		inProcessing = true;
 		start_process = std::chrono::high_resolution_clock::now();
 
-		start_record_process();
-		start_listen_process();
-		
+		if (!isMuting)
+			start_record_process();
+		if (isSpeaking)
+			start_listen_process();
 
 
 		return 1;
@@ -395,27 +397,7 @@ public:
 	void load_settings()
 	{
 		/* loads microphones */
-		if (short_input_devices)
-		{
-			for (int i = 0; i < input_devices.size(); i++)
-			{
-				delete[] short_input_devices[i];
-			}
-			delete[] short_input_devices;
-		}
-
-		input_devices = recorder->getAvailableDevices();
-		short_input_devices = new char*[input_devices.size()];
-
-		for(int i = 0; i < input_devices.size(); i++)
-		{
-			int s = input_devices[i].find('(') + 1;
-			int e = input_devices[i].find(')');
-		
-			short_input_devices[i] = new char[e - s + 1];
-			memcpy(short_input_devices[i], input_devices[i].substr(s, e - s).c_str(), e - s + 1);
-			
-		}
+		mic_dropdown->get_devices();
 
 			
 	}
@@ -575,16 +557,17 @@ public:
 				ImGui::SetWindowPos("settitng_win", window_pos);
 				ImGui::SetWindowSize("settitng_win", window_size);
 
-				/*ImGui::SetCursorPos(ImVec2(ImGui::GetWindowPos().x + 150, ImGui::GetWindowPos().x + 70));
-				ImGui::LabelText("##", "%s", recorder->getDevice().c_str());*/
+				
 				ImGui::SetWindowFontScale(3);
 				ImGui::SetCursorPos(ImVec2(ImGui::GetWindowPos().x + 150, ImGui::GetWindowPos().x + 70));
-				mic_dropdown->render();
-				
-				
 			
-
-				
+				if(mic_dropdown->render())
+				{
+					stop_record_process();
+					recorder->setDevice(mic_dropdown->get_current());
+					if(inProcessing && !isMuting)
+						start_record_process();
+				}
 				
 				
 				ImGui::End();
@@ -681,8 +664,8 @@ public:
 		}
 
 		stop_record_process();
-		printf("SWITCH\n");
-		start_record_process;
+		recorder->setDevice(recorder->getDefaultDevice());
+		start_record_process();
 	}
 
 	void start_record_process()
