@@ -69,7 +69,7 @@ namespace ImGui
 		{
 			
 			int s = (int)(devs[i].find('(') + 1);
-			int e = (int)(devs[i].find(')'));
+			int e = (int)(devs[i].find_last_of(')'));
 
 			if (devs[i] == rec->getDevice())
 			{

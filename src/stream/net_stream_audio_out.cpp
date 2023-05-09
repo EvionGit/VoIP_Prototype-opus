@@ -3,7 +3,7 @@
 
 namespace stream
 {
-	NetStreamAudioOut::NetStreamAudioOut(wsock::udpSocket& local_addr, wsock::addr remote_addr, uint32_t rate)
+	NetStreamAudioOut::NetStreamAudioOut(wsock::udpSocket& local_addr, wsock::addr remote_addr)
 		: local(local_addr), remote(remote_addr)
 	{
 		p_id = 0;

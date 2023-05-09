@@ -65,7 +65,7 @@ void VoIP::multiplex()
 {
 	char buff[1024];
 	wsock::addr from;
-	pack::AudioConfigPacket* conf;
+	pack::AudioConfigPacket conf;
 	size_t m;
 	while (1)
 	{
@@ -82,18 +82,21 @@ void VoIP::multiplex()
 			{
 
 
-				conf = (pack::AudioConfigPacket*)buff;
+				conf.unpack(buff,m);
 
 				/* incoming */
-				if (conf->packet_type == CONF_CONNECTION_TYPE)
+				if (conf.packet_type == CONF_CONNECTION_TYPE)
 				{
 					std::lock_guard<std::mutex> lock(mtx);
 
 					/* if busy now */
 					if (inProcessing || isIncoming || isCalling)
 					{
-						conf->packet_type = CONF_BUSY_TYPE;
-						sock._sendto(from, conf, sizeof(pack::AudioConfigPacket));
+						conf.packet_type = CONF_BUSY_TYPE;
+
+						char confbuf[sizeof(pack::AudioConfigPacket)];
+						conf.pack(confbuf, sizeof(pack::AudioConfigPacket));
+						sock._sendto(from, confbuf, sizeof(pack::AudioConfigPacket));
 					}
 					/* if free */
 					else
@@ -104,13 +107,13 @@ void VoIP::multiplex()
 							remote = new wsock::addr(from);
 
 						isIncoming = true;
-						remote_conf = *conf;
+						remote_conf = conf;
 					}
 
 				}
 
 				/* if received ABORT type*/
-				else if (conf->packet_type == CONF_ABORTING_TYPE)
+				else if (conf.packet_type == CONF_ABORTING_TYPE)
 				{
 					if ((isIncoming || inProcessing || isCalling) && from._get_straddr() == remote->_get_straddr())
 					{
@@ -120,18 +123,18 @@ void VoIP::multiplex()
 
 				}
 				/* if received ACCEPT type*/
-				else if (conf->packet_type == CONF_ACCEPT_TYPE)
+				else if (conf.packet_type == CONF_ACCEPT_TYPE)
 				{
 					if (isCalling && from._get_straddr() == remote->_get_straddr())
 					{
-						remote_conf = *conf;
+						remote_conf = conf;
 						accept_to();
 
 
 					}
 				}
 				/* if received BUSY type*/
-				else if (conf->packet_type == CONF_BUSY_TYPE)
+				else if (conf.packet_type == CONF_BUSY_TYPE)
 				{
 					printf("BUSY NOW\n");
 					isCalling = false;
@@ -214,7 +217,10 @@ int VoIP::call_to()
 
 
 	callref = call + 1;
-	sock._sendto(*remote, &local_conf, sizeof(local_conf));
+
+	char confbuf[sizeof(pack::AudioConfigPacket)];
+	local_conf.pack(confbuf, sizeof(pack::AudioConfigPacket));
+	sock._sendto(*remote, confbuf, sizeof(pack::AudioConfigPacket));
 
 	return 1;
 }
@@ -237,7 +243,10 @@ int VoIP::abort_to()
 
 	/* send ABORT type msg to remote */
 	local_conf.packet_type = CONF_ABORTING_TYPE;
-	sock._sendto(*remote, &local_conf, sizeof(local_conf));
+
+	char confbuf[sizeof(pack::AudioConfigPacket)];
+	local_conf.pack(confbuf, sizeof(pack::AudioConfigPacket));
+	sock._sendto(*remote, confbuf, sizeof(pack::AudioConfigPacket));
 
 	/* change ABORT-img to CALL-img  */
 	callref = call;
