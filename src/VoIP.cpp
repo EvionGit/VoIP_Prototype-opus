@@ -625,6 +625,7 @@ void VoIP::start_listen_process()
 	dec->set_input_stream(receiver);
 	listener->set_listener_conf(remote_conf.samples_rate, (uint8_t)remote_conf.channels);
 	dec->set_output_stream(listener, remote_conf.samples_rate, remote_conf.channels, remote_conf.data_size_ms);
+
 	listener->_play();
 
 }
