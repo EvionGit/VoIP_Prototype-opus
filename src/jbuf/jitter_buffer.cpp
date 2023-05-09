@@ -28,7 +28,7 @@ namespace jbuf
 		}
 
 
-
+		this->ping = 0;
 		this->interpackets_delay_ms = 0;
 		this->max_payload_size_bytes = 0;
 		this->payload_ms_per_packet = 0;
@@ -53,7 +53,6 @@ namespace jbuf
 		reset_jitter_buffer();
 	}
 
-
 	void JitterBuffer::reset_jitter_buffer()
 	{
 		std::lock_guard<std::mutex> lock(mtx);
@@ -72,8 +71,6 @@ namespace jbuf
 		max_payload_size_bytes = 0;
 		current_buffer_size_ms = 0;
 	}
-
-	
 
 	int JitterBuffer::push(AudioPacket& packet, Ttimepoint arrived_time)
 	{
@@ -159,7 +156,6 @@ namespace jbuf
 
 	}
 
-
 	int JitterBuffer::pop(AudioPacket& packet)
 	{
 		std::lock_guard<std::mutex> lock(mtx);
@@ -204,7 +200,6 @@ namespace jbuf
 
 
 	}
-
 
 	void JitterBuffer::calculate_jitter(AudioPacket& new_packet, Ttimepoint arrived_time)
 	{

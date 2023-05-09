@@ -1,4 +1,5 @@
 #include "VoIP.h"
+#include <iostream>
 
 
 
@@ -10,6 +11,12 @@ int main()
 	wsock::WSA_INIT wsa;
 	wsock::udpSocket* sock = 0;
 	VoIP* voip = 0;
+
+	/* start voip sound effect */
+	sf::Music start_app;
+	start_app.openFromFile("..\\sounds\\start\\voip-start.wav");
+	start_app.setPlayingOffset(sf::milliseconds(900));
+	start_app.setVolume(30);
 
 
 	sf::RenderWindow window(sf::VideoMode(800, 1000), "VoIP - prototype");
@@ -126,6 +133,7 @@ int main()
 			ImGui::SetWindowFontScale(2);
 			if(ImGui::Button("Start VoIP",ImVec2(400,150)))
 			{
+				start_app.play();
 				app = VOIP_APP;
 				if(!voip)
 				{
@@ -153,6 +161,9 @@ int main()
 	delete voip;
 	delete sock;
 	delete[] interfaces_c;
+
+
+	
 
 	return 0;
 

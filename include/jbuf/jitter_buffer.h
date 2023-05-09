@@ -52,6 +52,8 @@ namespace jbuf
 		int64_t last_received_timestamp_ll; // jitter value: save time for last received packet 
 		int64_t last_sent_timestamp_ll; // jitter value: save timestamp-value for last received packet
 		int jitter_ms; // current jitter value
+
+		int ping;
 	
 
 
@@ -64,6 +66,9 @@ namespace jbuf
 
 		int push(AudioPacket& packet, Ttimepoint arrived_time);
 		int pop(AudioPacket& packet);
+
+		int get_jitter();
+		int get_ping();
 		
 
 	private:

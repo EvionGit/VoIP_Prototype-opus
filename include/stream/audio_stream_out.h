@@ -37,6 +37,8 @@ namespace stream
 
 		void _stop();
 
+		void set_volume(int volume);
+
 	private:
 		/**/
 		virtual bool onGetData(Chunk& data) override;

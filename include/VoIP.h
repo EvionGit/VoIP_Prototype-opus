@@ -1,7 +1,7 @@
 #ifndef VOIP_APP_PROTO_HEADER_H
 #define VOIP_APP_PROTO_HEADER_H
 
-
+#include <iostream>
 
 #include <wsock/wsa_init.h>
 #include <wsock/udp_socket.h>
@@ -90,6 +90,9 @@ private:
 
 	sf::Texture process;
 
+	/* volume value */
+	int volume;
+
 	/* bitrate variation */
 	const char* bps[7]{ "8000","32000","64000","128000","196000","256000","320000" };
 	int cur_bit = 3;
@@ -103,6 +106,15 @@ private:
 	bool isMuting;
 	bool isSpeaking;
 	bool isSettingUp;
+
+	/* sound effects */
+	sf::SoundBuffer tap1, tap2;
+	sf::Sound s_tap1, s_tap2;
+
+	sf::Music incoming, outcoming;
+	std::vector<std::string> income_sounds, outcome_sounds;
+	const char** income_sounds_c, **outcome_sounds_c;
+	int cur_income, cur_outcome;
 
 
 public:
@@ -131,6 +143,9 @@ private:
 
 	/* loads setting before SETTING button was pressed*/
 	void load_settings();
+
+	/* loads sounds effects */
+	void load_sounds();
 
 	/* Active checks for using microphone availability. If not availability - choose a default mic */
 	void check_microphone();

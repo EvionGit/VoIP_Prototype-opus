@@ -33,8 +33,9 @@ VoIP::VoIP(wsock::udpSocket& local, int samples_rate, int channels) : sock(local
 	receiver->set_jitter_buffer(jbuffer);
 	listener->set_decoder(dec);
 
-
+	load_sounds();
 	set_ui();
+	
 
 	/* start thread for receiving data */
 	std::thread recv_data(&VoIP::multiplex, this);
@@ -59,6 +60,10 @@ VoIP::~VoIP()
 		delete jbuffer;
 	if (mic_dropdown)
 		delete mic_dropdown;
+	if (income_sounds_c)
+		delete[] income_sounds_c;
+	if (outcome_sounds_c)
+		delete[] outcome_sounds_c;
 }
 
 void VoIP::multiplex()
@@ -106,6 +111,7 @@ void VoIP::multiplex()
 						else
 							remote = new wsock::addr(from);
 
+						incoming.play();
 						isIncoming = true;
 						remote_conf = conf;
 					}
@@ -189,7 +195,7 @@ int VoIP::call_to()
 
 		remote = new wsock::addr(remote_ip, std::to_string(port));
 
-
+		outcoming.play();
 		isCalling = true;
 
 	}
@@ -206,6 +212,8 @@ int VoIP::call_to()
 		isIncoming = false;
 		inProcessing = true;
 		start_process = std::chrono::high_resolution_clock::now();
+
+		incoming.stop();
 
 		/* start record and listen */
 		if (!isMuting)
@@ -250,11 +258,15 @@ int VoIP::abort_to()
 
 	/* change ABORT-img to CALL-img  */
 	callref = call;
+	incoming.stop();
+	outcoming.stop();
 	return 1;
 }
 
 void VoIP::set_ui()
 {
+	volume = 30;
+
 	window_pos = ImVec2(0, 0);
 	window_size = ImVec2(800, 800);
 
@@ -306,12 +318,85 @@ void VoIP::set_ui()
 	isMuting = false;
 	isSpeaking = true;
 	isSettingUp = false;
+
+	
 }
 
 void VoIP::load_settings()
 {
 	/* loads microphones */
 	mic_dropdown->get_devices();
+
+	/* loads sound effects */
+	load_sounds();
+	
+}
+
+void VoIP::load_sounds()
+{
+	/* load taps effect to memory */
+	tap1.loadFromFile("..\\sounds\\taps\\tap_1.wav");
+	tap2.loadFromFile("..\\sounds\\taps\\tap_2.wav");
+
+	s_tap1.setBuffer(tap1);
+	s_tap2.setBuffer(tap2);
+
+	income_sounds_c = 0;
+	outcome_sounds_c = 0;
+	cur_income = 0;
+	cur_outcome = 0;
+
+
+	/* clear sounds files from memory */
+	income_sounds.clear();
+	outcome_sounds.clear();
+
+	if (income_sounds_c)
+		delete[] income_sounds_c;
+	if(outcome_sounds_c)
+		delete[] outcome_sounds_c;
+
+	/* get actual sounds files from directories */
+	WIN32_FIND_DATAA wfd;
+	HANDLE const h1Find = FindFirstFileA((LPCSTR)"..\\sounds\\income\\*.wav", &wfd);
+
+	if (INVALID_HANDLE_VALUE != h1Find)
+	{
+		do
+		{
+			income_sounds.push_back(wfd.cFileName);
+		} while (NULL != FindNextFileA(h1Find, &wfd));
+
+		FindClose(h1Find);
+	}
+
+	HANDLE const h2Find = FindFirstFileA((LPCSTR)"..\\sounds\\outcome\\*.wav", &wfd);
+
+	if (INVALID_HANDLE_VALUE != h2Find)
+	{
+		do
+		{
+			outcome_sounds.push_back(wfd.cFileName);
+		} while (NULL != FindNextFileA(h2Find, &wfd));
+
+		FindClose(h2Find);
+	}
+
+	
+	/* format for ImGui::Combo widget presentation */
+
+	income_sounds_c = new const char* [income_sounds.size()];
+	for (int i = 0; i < income_sounds.size(); i++)
+		income_sounds_c[i] = income_sounds[i].data();
+
+
+	outcome_sounds_c = new const char* [outcome_sounds.size()];
+	for (int i = 0; i < outcome_sounds.size(); i++)
+		outcome_sounds_c[i] = outcome_sounds[i].data();
+
+	/* dafault load to music stream */
+	incoming.openFromFile(std::string("..\\sounds\\income\\") + std::string(income_sounds_c[cur_income]));
+	outcoming.openFromFile(std::string("..\\sounds\\outcome\\") + std::string(outcome_sounds_c[cur_outcome]));
 }
 
 void VoIP::controller()
@@ -339,10 +424,21 @@ void VoIP::controller()
 			ImGui::SetWindowPos("incoming_btns_win", wbtns_pos);
 			ImGui::SetWindowSize("incoming_btns_win", wbtns_size);
 
+			/* volume slider */
+			ImGui::SetWindowFontScale(2);
+			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowPos().x + 125, ImGui::GetWindowPos().x + 20));
+			if (ImGui::SliderInt("##volume", &volume, 1, 100))
+			{
+				listener->set_volume(volume);
+				incoming.setVolume((float)volume);
+				outcoming.setVolume((float)volume);
+			}
+
 			/* accept call */
 			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowPos().x + 300, ImGui::GetWindowPos().x + 70));
 			if (ImGui::ImageButton(call[0], ImVec2(60, 60)))
 			{
+				s_tap2.play();
 				call_to();
 
 			}
@@ -351,6 +447,7 @@ void VoIP::controller()
 			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowPos().x + 400, ImGui::GetWindowPos().x + 70));
 			if (ImGui::ImageButton(call[1], ImVec2(60, 60)))
 			{
+				s_tap2.play();
 				abort_to();
 
 			}
@@ -411,7 +508,7 @@ void VoIP::controller()
 			ImGui::SetNextItemWidth(600);
 			if (ImGui::InputInt4("##input4_ip", octets, remote_ip_flags))
 			{
-
+				
 				for (int i = 0; i < 4; i++)
 				{
 					if (octets[i] > 255)
@@ -432,6 +529,7 @@ void VoIP::controller()
 			ImGui::SetNextItemWidth(600);
 			if (ImGui::InputInt("##input_port", &port, 1, remote_ip_flags))
 			{
+				
 				if (port < 1025)
 					port = 1025;
 				else if (port > 65535)
@@ -478,6 +576,7 @@ void VoIP::controller()
 			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowPos().x + 150, ImGui::GetWindowPos().x + 120));
 			if (mic_dropdown->render())
 			{
+				s_tap2.play();
 				stop_record_process();
 				recorder->setDevice(mic_dropdown->get_current());
 				if (inProcessing && !isMuting)
@@ -490,14 +589,40 @@ void VoIP::controller()
 			int last_bit = cur_bit;
 			if (ImGui::Combo("##combo_bitrate", &cur_bit, bps, 7))
 			{
+				
 				if (cur_bit != last_bit)
 				{
+					s_tap2.play();
 					stop_record_process();
 					bitrate = atoi(bps[cur_bit]);
 					if (inProcessing && !isMuting)
 						start_record_process();
 				}
 			}
+
+			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowPos().x + 150, ImGui::GetCursorPosY() + 30));
+			ImGui::LabelText("##label_incoming_sounds", "Incoming sound:");
+			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowPos().x + 150, ImGui::GetCursorPosY()));
+			
+			if (ImGui::Combo("##combo_incoming_sound", &cur_income, income_sounds_c, income_sounds.size()))
+			{
+					s_tap2.play();
+					incoming.openFromFile(std::string("..\\sounds\\income\\") + std::string(income_sounds_c[cur_income]));
+			
+			}
+
+			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowPos().x + 150, ImGui::GetCursorPosY() + 30));
+			ImGui::LabelText("##label_outcoming_sounds", "Outcoming sound:");
+			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowPos().x + 150, ImGui::GetCursorPosY()));
+
+			if (ImGui::Combo("##combo_outcoming_sound", &cur_outcome, outcome_sounds_c, outcome_sounds.size()))
+			{
+				s_tap2.play();
+				outcoming.openFromFile(std::string("..\\sounds\\outcome\\") + std::string(outcome_sounds_c[cur_outcome]));
+
+			}
+
+
 
 
 
@@ -508,17 +633,28 @@ void VoIP::controller()
 		{
 			printf("M_down\n");
 		}*/
-
+		 
 		/* btns window */
 		if (ImGui::Begin("btns_win", 0, wbtns))
 		{
 			ImGui::SetWindowPos("btns_win", wbtns_pos);
 			ImGui::SetWindowSize("btns_win", wbtns_size);
 
+			/* volume slider */
+			ImGui::SetWindowFontScale(2);
+			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowPos().x + 125, ImGui::GetWindowPos().x + 20));
+			if(ImGui::SliderInt("##volume", &volume, 1, 100))
+			{
+				listener->set_volume(volume);
+				incoming.setVolume((float)volume);
+				outcoming.setVolume((float)volume);
+			}
+
 			/* micro */
 			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowPos().x + 200, ImGui::GetWindowPos().x + 70));
 			if (ImGui::ImageButton(*micref, ImVec2(60, 60)))
 			{
+				s_tap1.play();
 				if (isMuting)
 				{
 					micref = mic;
@@ -538,6 +674,7 @@ void VoIP::controller()
 			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowPos().x + 300, ImGui::GetWindowPos().x + 70));
 			if (ImGui::ImageButton(*speakref, ImVec2(60, 60)))
 			{
+				s_tap1.play();
 				if (!isSpeaking)
 				{
 					speakref = speak;
@@ -559,6 +696,7 @@ void VoIP::controller()
 			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowPos().x + 400, ImGui::GetWindowPos().x + 70));
 			if (ImGui::ImageButton(*callref, ImVec2(60, 60)))
 			{
+				s_tap2.play();
 				if (isCalling || inProcessing)
 				{
 					abort_to();
@@ -575,6 +713,7 @@ void VoIP::controller()
 			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowPos().x + 500, ImGui::GetWindowPos().x + 70));
 			if (ImGui::ImageButton(*settingsref, ImVec2(60, 60)))
 			{
+				s_tap1.play();
 				if (!isSettingUp)
 				{
 					load_settings();

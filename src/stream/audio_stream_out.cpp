@@ -71,4 +71,9 @@ namespace stream
 		reading = false;
 		this->stop();
 	}
+
+	void AudioStreamOut::set_volume(int volume)
+	{
+		setVolume((float)volume);
+	}
 }
