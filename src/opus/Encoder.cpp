@@ -4,7 +4,7 @@ namespace ops
 {
 	Encoder::Encoder(OPUS_TYPE opus_app_type)
 		:
-		  input(0), output(0), tick_rate(0), bitrate(48000), send_event(0),
+		  input(0), output(0), tick_rate(0), bitrate(128000), send_event(0),
 		  enc(0),errorcode(0),opus_type(OPUS_TYPE::AUDIO),
 		  irate(0), ichannels(0), ims(0),ichunk(0),ichunk_size(0),
 		  orate(0), ochannels(0), ochunk(0), ochunk_size(0)
@@ -87,6 +87,7 @@ namespace ops
 		if (!bitrate || (bitrate >= 500 && bitrate <= 512000))
 		{
 			this->bitrate = bitrate;
+			opus_encoder_ctl(enc, OPUS_SET_BITRATE(bitrate));
 		}
 
 	}
@@ -108,7 +109,7 @@ namespace ops
 		int read = 0;
 		int i = 1;
 		long long last = 0;
-		while((read = input->stream_read(ichunk,ichunk_size*2,ichunk_size*2)) > 0)
+		while((read = (int)input->stream_read(ichunk,ichunk_size*2,ichunk_size*2)) > 0)
 		{
 			//printf("READ: %i  - %lli\n",read, (std::chrono::high_resolution_clock::now().time_since_epoch().count() - last) / 1000000);
 			last = std::chrono::high_resolution_clock::now().time_since_epoch().count();

@@ -26,6 +26,8 @@ namespace wsock
 		std::string _get_straddr();
 		ADDRESS_FAMILY _get_family();
 		size_t _get_size();
+
+		static std::vector<std::string> get_available_interfaces(int family);
 	};
 }
 

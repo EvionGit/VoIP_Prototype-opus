@@ -31,6 +31,7 @@ namespace ops
 	enum OPUS_SAMPLES_RATE {
 		kHz8 = 8000,
 		kHz12 = 12000,
+		kHz16 = 16000,
 		kHz24 = 24000,
 		kHz48 = 48000,
 		DEFAULT = 0

@@ -75,6 +75,9 @@
     <ClCompile Include="..\imgui\imgui_mic_dropdown.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="VoIP.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\wsock\addr_struct.h">
@@ -129,6 +132,9 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="..\imgui\imgui_mic_dropdown.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\VoIP.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

@@ -220,11 +220,8 @@ namespace jbuf
 			nrt = (arrived_time.time_since_epoch().count() - last_received_timestamp_ll);
 			d = (nrt - ipd) / (float)1000000;
 
-			jitter_ms = jitter_ms + (std::abs(d) - jitter_ms) / 16;
+			jitter_ms = (int)(jitter_ms + (std::abs(d) - jitter_ms) / 16);
 
-			// adapt jitter
-
-			//printf("JITTER: %f\n", jitter_ms);
 
 		}
 

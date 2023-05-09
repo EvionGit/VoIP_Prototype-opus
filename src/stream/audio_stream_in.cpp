@@ -65,8 +65,8 @@ namespace stream
 			{
 				
 				memcpy(tobuffer, audiobuffer + s, readamount);
-				s += readamount;
-				size -= readamount;
+				s += (uint32_t)readamount;
+				size -= (uint32_t)readamount;
 				
 			}
 
@@ -77,8 +77,8 @@ namespace stream
 				memcpy(tobuffer, audiobuffer + s, toread);
 				memcpy(tobuffer, audiobuffer, readamount - toread);
 
-				s = readamount - toread;
-				size -= readamount;
+				s = (uint32_t)(readamount - toread);
+				size -= (uint32_t)readamount;
 			
 			}
 
@@ -114,8 +114,8 @@ namespace stream
 		if ((AUDIOBUFF - e) >= writesize)
 		{
 			memcpy(audiobuffer + e, frombuffer, writesize);
-			e += writesize;
-			size += writesize;
+			e += (uint32_t)writesize;
+			size += (uint32_t)writesize;
 			
 		}
 
@@ -127,10 +127,10 @@ namespace stream
 			memcpy(audiobuffer + e, frombuffer, length);
 			memcpy(audiobuffer, (char*)frombuffer + length, writesize - length);
 
-			e = writesize - length;
+			e = (uint32_t)(writesize - length);
 			if (s < e) s = e;
 
-			size += writesize;
+			size += (uint32_t)writesize;
 
 		}
 		

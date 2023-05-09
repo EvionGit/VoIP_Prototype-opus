@@ -29,17 +29,17 @@ namespace ops
 		if (errorcode != 0)
 			return errorcode;
 
-		int read = input->stream_read(ichunk, 4000, 4000);
+		int read = (int)input->stream_read(ichunk, 4000, 4000);
 		if (read == OPS_LOST_PACKET)
 		{
-			int r = opus_decode(dec, 0, read, ochunk, ochunk_size / 2, 0);
+			int r = opus_decode(dec, 0, read, ochunk, ochunk_size / ochannels, 0);
 			memcpy(samples, ochunk, r * ochannels * 2);
 			return r * ochannels * 2;
 			
 		}
 		else if(read > 0)
 		{
-			int r = opus_decode(dec, ichunk, read, ochunk, ochunk_size / 2, 0);
+			int r = opus_decode(dec, ichunk, read, ochunk, ochunk_size / ochannels, 0);
 
 			memcpy(samples, ochunk, r * ochannels * 2);
 			return r * ochannels * 2;
@@ -60,9 +60,9 @@ namespace ops
 
 		int read = 0, r = 0;
 READER:
-		while((read = input->stream_read(ichunk,4000,4000)) > 0)
+		while((read = (int)input->stream_read(ichunk,4000,4000)) > 0)
 		{
-			r = opus_decode(dec, ichunk, read, ochunk, ochunk_size / 2, 0);
+			r = opus_decode(dec, ichunk, read, ochunk, ochunk_size / ochannels, 0);
 			
 			
 			output->stream_write(ochunk, r * ochannels*2);
@@ -70,7 +70,7 @@ READER:
 
 		if (read == OPS_LOST_PACKET)
 		{
-			r = opus_decode(dec, 0, read, ochunk, ochunk_size / 2, 0);
+			r = opus_decode(dec, 0, read, ochunk, ochunk_size / ochannels, 0);
 			output->stream_write(ochunk, r * ochannels*2);
 			goto READER;
 		}

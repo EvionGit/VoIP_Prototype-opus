@@ -35,7 +35,7 @@ namespace stream
 	{
 		packet_headers.packet_type = AUDIO_PACKET_TYPE;
 		packet_headers.id++;
-		packet_headers.size = writesize;
+		packet_headers.size = (uint16_t)writesize;
 		packet_headers.data_in_ms = 20;
 		packet_headers.timestamp = 0;
 		packet_headers.data = (char*)frombuffer;

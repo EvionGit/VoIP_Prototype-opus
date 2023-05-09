@@ -2,59 +2,53 @@
 
 namespace ImGui
 {
-	MicDropDown::MicDropDown(sf::SoundRecorder* recorder) : rec(recorder), text_label_flags(0),
-		isOpen(false), devs_c_style(0), selected(0)
+	MicDropDown::MicDropDown(sf::SoundRecorder* recorder) : rec(recorder),devs_c(0), selected(0)
 	{
-		text_label_flags |= ImGuiInputTextFlags_ReadOnly;
+		
 	}
 
 	MicDropDown::~MicDropDown()
 	{
 		
-		if (!devs.empty())
+		if(devs_c)
 		{
-			for (auto it = devs.begin(); it != devs.end(); it++)
+			for (int i = 0; i < devs.size(); i++)
 			{
-				delete[] it->second;
+				delete[] devs_c[i];
 			}
-		}
-		devs.clear();
 
-		if (devs_c_style)
-			delete[] devs_c_style;
+			
+			delete[] devs_c;
+			devs.clear();
+
+		}
 
 	}
 
 	std::string MicDropDown::get_current()
 	{
-		for (auto it = devs.begin();it != devs.end();it++)
-		{
-			if (it->second == devs_c_style[selected])
-				return it->first;
-		}
-		return rec->getDefaultDevice();
+		return devs[selected];
 	}
 
 	void MicDropDown::get_devices()
 	{
-		/* clear prev devs map */
-		if (!devs.empty())
+		if (devs_c)
 		{
-			for (auto it = devs.begin(); it != devs.end(); it++)
+			for (int i = 0; i < devs.size(); i++)
 			{
-				delete[] it->second;
+				delete[] devs_c[i];
 			}
+
+			delete[] devs_c;
+			devs.clear();
+
 		}
-		devs.clear();
 
-		if (devs_c_style)
-			delete[] devs_c_style;
-
-		std::vector<std::string> d = rec->getAvailableDevices();
+		devs = rec->getAvailableDevices();
 
 		/* check if current dev not found */
 		bool isNotFound = true;
-		for (auto it = d.begin(); it != d.end(); it++)
+		for (auto it = devs.begin(); it != devs.end(); it++)
 		{
 			if (rec->getDevice() == *it)
 			{
@@ -66,18 +60,18 @@ namespace ImGui
 		if (isNotFound)
 			rec->setDevice(rec->getDefaultDevice());
 		
-		/* clear array of ptrs to short_names */
-		devs_c_style = new char*[d.size()];
+		/* clear array of ptrs*/
+		devs_c = new char*[devs.size()];
 
 		/* fills devs map <full_name,short_name> */
 		int selected_size = 0;
-		for (int i = 0; i < d.size(); i++)
+		for (int i = 0; i < devs.size(); i++)
 		{
 			
-			int s = d[i].find('(') + 1;
-			int e = d[i].find(')');
+			int s = (int)(devs[i].find('(') + 1);
+			int e = (int)(devs[i].find(')'));
 
-			if (d[i] == rec->getDevice())
+			if (devs[i] == rec->getDevice())
 			{
 				selected_size = e - s + 1;
 				selected = i;
@@ -85,52 +79,22 @@ namespace ImGui
 				
 
 
-			devs[d[i]] = new char[e - s + 1];
-			memcpy(devs[d[i]], d[i].substr(s, e - s).c_str(), e - s + 1);
+			devs_c[i] = new char[e - s + 1];
+			memcpy(devs_c[i], devs[i].substr(s, e - s).c_str(), e - s + 1);
 
-			devs_c_style[i] = devs[d[i]];
 
 		}
-
-		/* set current uses audio interface */
-		memcpy(input_device, devs[rec->getDevice()], selected_size);
 		
 	}
 
 	bool MicDropDown::render()
 	{
-		int field_size = (ImGui::GetWindowSize().x - (ImGui::GetCursorPosX()) * 2) - 50;
-		ImVec2 cur_pos(ImGui::GetCursorPosX(), ImGui::GetCursorPosY());
-
-		ImGui::SetNextItemWidth(field_size);
-		
-		ImGui::InputText("##",input_device, rec->getDevice().size(),text_label_flags);
-		ImVec2 size_last_element = ImGui::GetItemRectSize();
-		
-
-		ImGui::SetCursorPos(ImVec2(cur_pos.x + field_size, cur_pos.y));
-
-		if(ImGui::ArrowButton("dropdown_btn", isOpen ? 2 : 3))
+		int last = selected;
+		if(ImGui::Combo("##devs_combo", &selected, devs_c, (int)devs.size()))
 		{
-			isOpen = !isOpen;
-		}
-
-		if(isOpen)
-		{
-			ImGui::SetCursorPos(ImVec2(cur_pos.x, cur_pos.y+size_last_element.y));
-			ImGui::SetNextItemWidth(field_size);
-			int sel = selected;
-			if(ImGui::ListBox("##", &sel, devs_c_style, devs.size()))
+			if(selected != last)
 			{
-				if(sel != selected)
-				{
-					/* set current uses audio interface */
-					memcpy(input_device, devs_c_style[sel], 100);
-					selected = sel;
-					isOpen = false;
-					return 1;
-				}
-				
+				return 1;
 			}
 		}
 

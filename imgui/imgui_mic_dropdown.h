@@ -12,13 +12,11 @@ namespace ImGui
 	class MicDropDown
 	{
 	private:
-		std::map<std::string, char*> devs;
-		char** devs_c_style;
-		bool isOpen;
+		std::vector<std::string> devs;
+		char** devs_c;
 		int selected;
 		sf::SoundRecorder* rec;
-		char input_device[255];
-		ImGuiInputTextFlags text_label_flags;
+		
 	public:
 		MicDropDown(sf::SoundRecorder* recorder);
 		~MicDropDown();

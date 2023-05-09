@@ -83,6 +83,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)\bin\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -116,7 +117,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SFML_STATIC;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;SFML_STATIC;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)\SFML\include;$(SolutionDir)\include;$(SolutionDir)\imgui\</AdditionalIncludeDirectories>
     </ClCompile>
@@ -133,14 +134,17 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SFML_STATIC;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)\SFML\include;$(SolutionDir)\include;$(SolutionDir)\imgui\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)\lib; $(SolutionDir)\SFML\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opus.lib;flac.lib;opengl32.lib;gdi32.lib;sfml-window-s-d.lib;freetype.lib;sfml-graphics-s-d.lib;openal32.lib;sfml-system-s-d.lib;sfml-audio-s-d.lib;vorbis.lib;vorbisfile.lib;vorbisenc.lib;ogg.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -164,12 +168,14 @@
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
+    <ClCompile Include="VoIP.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imgui_mic_dropdown.h" />
     <ClInclude Include="..\include\pack\audio_packet.h" />
     <ClInclude Include="..\include\pack\config_packet.h" />
     <ClInclude Include="..\include\stream\net_stream_audio_out.h" />
+    <ClInclude Include="..\include\VoIP.h" />
     <ClInclude Include="..\include\wsock\addr_struct.h" />
     <ClInclude Include="..\include\wsock\base_definition.h" />
     <ClInclude Include="..\include\wsock\socket.h" />

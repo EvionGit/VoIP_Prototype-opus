@@ -4,6 +4,7 @@
 #include <WinSock2.h> // win.socket API
 #include <ws2tcpip.h>
 #include <string> 
+#include <vector>
 #include <stdio.h>
 #include <stdexcept>
 #include <wsock/wsa_init.h>
