@@ -12,7 +12,12 @@ int main()
 	wsock::udpSocket* sock = 0;
 	VoIP* voip = 0;
 
-	/* start voip sound effect */
+	/* voip sounds effect */
+	sf::SoundBuffer tap1;
+	sf::Sound s_tap1;
+	tap1.loadFromFile("..\\sounds\\taps\\tap_2.wav");
+	s_tap1.setBuffer(tap1);
+
 	sf::Music start_app;
 	start_app.openFromFile("..\\sounds\\start\\voip-start.wav");
 	start_app.setPlayingOffset(sf::milliseconds(900));
@@ -98,6 +103,7 @@ int main()
 			ImGui::SetCursorPos(ImVec2(150, 190));
 			if(ImGui::Combo("##interface",&interface_selected,interfaces_c,interfaces_s.size()))
 			{
+				s_tap1.play();
 				/* change active interface */
 			}
 			ImGui::SetWindowFontScale(2);
@@ -118,7 +124,8 @@ int main()
 			ImGui::LabelText("##label_samples_rate", "Samples rate (Hz): ");
 			ImGui::SetCursorPos(ImVec2(150, 490));
 			ImGui::SetWindowFontScale(3);
-			ImGui::Combo("##samples_rate", &cur_sample_rate, samples_rate, 5);
+			if(ImGui::Combo("##samples_rate", &cur_sample_rate, samples_rate, 5))
+				s_tap1.play();
 			
 
 			ImGui::SetCursorPos(ImVec2(150, 550));
@@ -126,13 +133,15 @@ int main()
 			ImGui::LabelText("##label_channels", "Channels: ");
 			ImGui::SetCursorPos(ImVec2(150, 590));
 			ImGui::SetWindowFontScale(3);
-			ImGui::SliderInt("##slider_channels", &channels, 1, 2);
+			if(ImGui::SliderInt("##slider_channels", &channels, 1, 2))
+				s_tap1.play();
 
 
 			ImGui::SetCursorPos(ImVec2(200, 800));
 			ImGui::SetWindowFontScale(2);
 			if(ImGui::Button("Start VoIP",ImVec2(400,150)))
 			{
+				s_tap1.play();
 				start_app.play();
 				app = VOIP_APP;
 				if(!voip)
