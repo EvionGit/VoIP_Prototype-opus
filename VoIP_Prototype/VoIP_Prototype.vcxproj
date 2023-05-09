@@ -159,6 +159,7 @@
     <ClCompile Include="..\src\stream\net_stream_audio_in.cpp" />
     <ClCompile Include="..\src\stream\net_stream_audio_out.cpp" />
     <ClCompile Include="..\src\stream\stream.cpp" />
+    <ClCompile Include="..\src\VoIP.cpp" />
     <ClCompile Include="..\src\wsock\addr_struct.cpp" />
     <ClCompile Include="..\src\wsock\socket.cpp" />
     <ClCompile Include="..\src\wsock\udp_socket.cpp" />
@@ -168,7 +169,6 @@
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
-    <ClCompile Include="VoIP.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui\imgui_mic_dropdown.h" />

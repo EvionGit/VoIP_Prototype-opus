@@ -83,20 +83,21 @@ int main()
 		{
 			ImGui::SetWindowPos("main_window", mwindow_pos);
 			ImGui::SetWindowSize("main_window", mwindow_size);
-			ImGui::SetWindowFontScale(3);
+			ImGui::SetWindowFontScale(2);
 
 			ImGui::SetCursorPos(ImVec2(150,150));
 			ImGui::LabelText("##label_local_interface", "Local interface: ");
-
-			ImGui::SetCursorPos(ImVec2(150, 200));
+			ImGui::SetWindowFontScale(3);
+			ImGui::SetCursorPos(ImVec2(150, 190));
 			if(ImGui::Combo("##interface",&interface_selected,interfaces_c,interfaces_s.size()))
 			{
 				/* change active interface */
 			}
-
-			ImGui::SetCursorPos(ImVec2(150, 280));
+			ImGui::SetWindowFontScale(2);
+			ImGui::SetCursorPos(ImVec2(150, 250));
 			ImGui::LabelText("##label_local_port", "Local port: ");
-			ImGui::SetCursorPos(ImVec2(150, 330));
+			ImGui::SetCursorPos(ImVec2(150, 290));
+			ImGui::SetWindowFontScale(3);
 			if (ImGui::InputInt("##local_port", &port, 1, local_port_flags))
 			{
 				if (port < 1025)
@@ -105,19 +106,24 @@ int main()
 					port = 65535;
 			}
 
-			ImGui::SetCursorPos(ImVec2(150, 480));
-			ImGui::LabelText("##label_samples_rate", "Samples rate: ");
-			ImGui::SetCursorPos(ImVec2(150, 530));
+			ImGui::SetCursorPos(ImVec2(150, 450));
+			ImGui::SetWindowFontScale(2);
+			ImGui::LabelText("##label_samples_rate", "Samples rate (Hz): ");
+			ImGui::SetCursorPos(ImVec2(150, 490));
+			ImGui::SetWindowFontScale(3);
 			ImGui::Combo("##samples_rate", &cur_sample_rate, samples_rate, 5);
 			
 
-			ImGui::SetCursorPos(ImVec2(150, 610));
+			ImGui::SetCursorPos(ImVec2(150, 550));
+			ImGui::SetWindowFontScale(2);
 			ImGui::LabelText("##label_channels", "Channels: ");
-			ImGui::SetCursorPos(ImVec2(150, 660));
+			ImGui::SetCursorPos(ImVec2(150, 590));
+			ImGui::SetWindowFontScale(3);
 			ImGui::SliderInt("##slider_channels", &channels, 1, 2);
 
 
 			ImGui::SetCursorPos(ImVec2(200, 800));
+			ImGui::SetWindowFontScale(2);
 			if(ImGui::Button("Start VoIP",ImVec2(400,150)))
 			{
 				app = VOIP_APP;

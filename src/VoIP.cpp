@@ -2,6 +2,7 @@
 
 VoIP::VoIP(wsock::udpSocket& local, int samples_rate, int channels) : sock(local), current_process_time(0)
 {
+	/* set local configs to ConfPacket */
 	local_conf.channels = channels;
 	local_conf.data_size_ms = 20;
 	local_conf.key = AUDIO_KEY;
@@ -19,11 +20,10 @@ VoIP::VoIP(wsock::udpSocket& local, int samples_rate, int channels) : sock(local
 	
 
 	bitrate = atoi(bps[cur_bit]);
-	jbuffer = new jbuf::JitterBuffer(40, 0, 200);
+	jbuffer = new jbuf::JitterBuffer(40);
 	recorder = new stream::AudioStreamIn;
 	listener = new stream::AudioStreamOut;
 	receiver = new stream::NetStreamAudioIn;
-	//sender = new stream::NetStreamAudioOut - init when calling or accepting incoming;
 	mic_dropdown = new ImGui::MicDropDown(recorder);
 
 
@@ -36,6 +36,7 @@ VoIP::VoIP(wsock::udpSocket& local, int samples_rate, int channels) : sock(local
 
 	set_ui();
 
+	/* start thread for receiving data */
 	std::thread recv_data(&VoIP::multiplex, this);
 	recv_data.detach();
 }
@@ -73,7 +74,7 @@ void VoIP::multiplex()
 
 			if (*(int8_t*)buff == AUDIO_PACKET_TYPE)
 			{
-
+				
 				if (inProcessing)
 					receiver->stream_write(buff, m);
 			}
@@ -148,7 +149,7 @@ int VoIP::accept_to()
 
 	if (sender)
 		delete sender;
-	sender = new stream::NetStreamAudioOut(sock, *remote, local_conf.data_size_ms);
+	sender = new stream::NetStreamAudioOut(sock, *remote);
 
 
 	isIncoming = false;
@@ -195,7 +196,7 @@ int VoIP::call_to()
 		if (sender)
 			delete sender;
 
-		sender = new stream::NetStreamAudioOut(sock, *remote, local_conf.data_size_ms);
+		sender = new stream::NetStreamAudioOut(sock, *remote);
 
 		local_conf.packet_type = CONF_ACCEPT_TYPE;
 

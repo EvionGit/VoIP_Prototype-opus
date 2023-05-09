@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <wsock/wsa_init.h>
 
 #define AUDIO_PACKET_TYPE 55
 
@@ -19,38 +20,33 @@ namespace pack
 		int64_t timestamp;
 		char* data;
 
+		int pack(char* buffer,int len)
+		{
+			*(int8_t*)buffer = packet_type;
+			*(uint32_t*)(buffer + 1) = htonl(id);
+			*(uint16_t*)(buffer + 5) = htons(size);
+			*(int32_t*)(buffer + 7) = htonl(data_in_ms);
+			*(int64_t*)(buffer + 11) = htonll(timestamp);
+			memcpy(buffer + 19, data, size);
 
-	/*public:
-		AudioPacket() : id(0),size(0),data_in_ms(0),timestamp(0),data(0) {};
-		AudioPacket(const AudioPacket& from)
-		{
-			id = from.id;
-			size = from.size;
-			data_in_ms = from.data_in_ms;
-			timestamp = from.timestamp;
-			data = from.data;
+			return 19 + size;
+			
 		}
-		AudioPacket(AudioPacket&& from) noexcept
-		{
-			id = from.id;
-			size = from.size;
-			data_in_ms = from.data_in_ms;
-			timestamp = from.timestamp;
-			data = from.data;
 
-			from.data = 0;
-		}
-		AudioPacket& operator=(const AudioPacket& from)
+		int unpack(char* buffer, int len)
 		{
-			id = from.id;
-			size = from.size;
-			data_in_ms = from.data_in_ms;
-			timestamp = from.timestamp;
-			data = from.data;
-			return *this;
-		}*/
+			packet_type = *(int8_t*)buffer;
+			id = ntohl(*(uint32_t*)(buffer + 1));
+			size = ntohs(*(uint16_t*)(buffer + 5));
+			data_in_ms = ntohl(*(int32_t*)(buffer + 7));
+			timestamp = ntohll(*(int64_t*)(buffer + 11));
+			data = buffer + 19;
+
+			return 19 + size;
+		}
 
 	};
+
 }
 
 #endif

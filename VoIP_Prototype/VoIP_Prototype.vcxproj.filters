@@ -75,7 +75,7 @@
     <ClCompile Include="..\imgui\imgui_mic_dropdown.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="VoIP.cpp">
+    <ClCompile Include="..\src\VoIP.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

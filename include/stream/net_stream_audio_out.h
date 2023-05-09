@@ -4,7 +4,7 @@
 
 #include "stream.h"
 #include <wsock/udp_socket.h>
-#include <jbuf/jitter_buffer.h>
+#include <pack/audio_packet.h>
 
 
 namespace stream
@@ -13,25 +13,25 @@ namespace stream
 	{
 	private:
 		pack::AudioPacket packet_headers;
-		jbuf::JitterBuffer* jb;
+		uint32_t p_id;
+
 		wsock::udpSocket& local;
 		wsock::addr remote;
 		std::mutex mtx;
 		char sendbuffer[2048];
-		uint32_t sample_rate;
-		long long last = 0;
+		
 
 
 
 	public:
-		NetStreamAudioOut(wsock::udpSocket& local_addr, wsock::addr remote_addr, uint32_t rate);
+		NetStreamAudioOut(wsock::udpSocket& local_addr, wsock::addr remote_addr);
 		~NetStreamAudioOut();
 
 	public:
 		virtual int64_t stream_write(const void* frombuffer, int64_t writesize) override;
+		
+	private:
 		virtual int64_t stream_read(void* tobuffer, int64_t buffersize, int64_t readamount) override;
-
-		void set_jitter_buffer(jbuf::JitterBuffer* jbuffer);
 
 
 

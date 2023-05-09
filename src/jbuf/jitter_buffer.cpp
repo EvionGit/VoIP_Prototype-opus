@@ -3,13 +3,13 @@
 namespace jbuf
 {
 
-	JitterBuffer::JitterBuffer(uint32_t buffering_time_ms, uint32_t payload_ms_per_packet, uint32_t max_jitter_ms, bool is_circular)
+	JitterBuffer::JitterBuffer(uint32_t buffering_time_ms, uint32_t max_jitter_ms, bool is_circular)
 	{
 
 		this->nominal_jitter_ms = buffering_time_ms * 2;
 		this->is_circular = is_circular;
 
-		// dont need!
+		
 		if (!max_jitter_ms)
 		{
 			/* used adaptive jitter buffer */
@@ -88,7 +88,7 @@ namespace jbuf
 
 		else if (current_buffer_size_ms >= max_jitter_ms) // circular overflow
 		{
-			printf("OVERFLOW\n");
+			
 			last_packet_id++;
 			current_buffer_size_ms -= buffer.front().data_in_ms;
 			delete[] buffer.front().data;
@@ -149,7 +149,7 @@ namespace jbuf
 
 
 
-		//printf("IS BUFFERING : %i\n", is_buffering);
+	
 		current_buffer_size_ms += packet.data_in_ms;
 		if (is_buffering && current_buffer_size_ms >= buffering_time_ms)
 			is_buffering = false;

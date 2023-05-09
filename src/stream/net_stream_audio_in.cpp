@@ -42,14 +42,13 @@ namespace stream
 		
 		if (jb)
 		{
-			AudioPacket* ap = (AudioPacket*)frombuffer;
+			AudioPacket ap;
+			ap.unpack((char*)frombuffer,writesize);
 
-			char* payload = (char*)frombuffer + sizeof(AudioPacket);
-			ap->data = payload;
 
 			Ttimepoint arr = std::chrono::high_resolution_clock::now();
 
-			return jb->push(*ap, arr);
+			return jb->push(ap, arr);
 		}
 
 		return 0;

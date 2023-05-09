@@ -56,7 +56,7 @@ namespace jbuf
 
 
 	public:
-		JitterBuffer(uint32_t buffering_time_ms,uint32_t payload_ms_per_packet,uint32_t max_jitter_ms = 0, bool is_circular = true);
+		JitterBuffer(uint32_t buffering_time_ms,uint32_t max_jitter_ms = 0, bool is_circular = true);
 		~JitterBuffer();
 
 	public:
