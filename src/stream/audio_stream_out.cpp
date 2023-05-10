@@ -15,11 +15,13 @@ namespace stream
 
 	int64_t AudioStreamOut::stream_read(void* tobuffer, int64_t buffersize, int64_t readamount)
 	{
+		/* stream read implemented in onGetData */
 		return 0;
 	}
 
 	int64_t AudioStreamOut::stream_write(const void* frombuffer, int64_t writesize)
 	{
+		/* stream write implemented in onGetData */
 		return 0;
 	}
 

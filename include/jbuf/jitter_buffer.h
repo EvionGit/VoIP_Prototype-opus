@@ -35,14 +35,14 @@ namespace jbuf
 		uint64_t max_payload_size_bytes; // info from sender: max size of packet payload
 		uint32_t current_buffer_size_ms; // current filled buffer in ms 
 		bool is_adaptive; // flag: 0 - fixed, 1 - adaptive
-		bool is_circular;
+		bool is_circular; // if true - new packets of data will waiting while buffer is full 
 
 
 		//std::deque<char*> payload_memory_pool; // pool of available memory blocks for arriving packets   
 		std::deque<AudioPacket> buffer; // jitter buffer for received data
 		std::mutex mtx; // mutex for multi-threading access
 
-		bool isFirst_packet = true;
+		bool isFirst_packet = true; // refresh beginning packet id if true;
 		uint16_t last_packet_id = 0; // order control
 
 		uint32_t buffering_time_ms; // time for buffering
@@ -53,7 +53,6 @@ namespace jbuf
 		int64_t last_sent_timestamp_ll; // jitter value: save timestamp-value for last received packet
 		int jitter_ms; // current jitter value
 
-		int ping;
 	
 
 
@@ -62,16 +61,21 @@ namespace jbuf
 		~JitterBuffer();
 
 	public:
+		/* clean the jitter buffer */
 		void reset_jitter_buffer();
-
+		
+		/* push packet to the queue */
 		int push(AudioPacket& packet, Ttimepoint arrived_time);
+
+		/* pop packet from the queue*/
 		int pop(AudioPacket& packet);
 
+		/* get jitter value */
 		int get_jitter();
-		int get_ping();
 		
 
 	private:
+		/* calculate jitter after received a packet */
 		void calculate_jitter(AudioPacket& new_packet, Ttimepoint arrived_time);
 		
 	};

@@ -162,6 +162,8 @@
     <ClCompile Include="..\src\VoIP.cpp" />
     <ClCompile Include="..\src\wsock\addr_struct.cpp" />
     <ClCompile Include="..\src\wsock\socket.cpp" />
+    <ClCompile Include="..\src\wsock\tcp_server_socket.cpp" />
+    <ClCompile Include="..\src\wsock\tcp_socket.cpp" />
     <ClCompile Include="..\src\wsock\udp_socket.cpp" />
     <ClCompile Include="..\src\wsock\wsa_init.cpp" />
     <ClCompile Include="imgui\imgui-SFML.cpp" />
@@ -179,6 +181,8 @@
     <ClInclude Include="..\include\wsock\addr_struct.h" />
     <ClInclude Include="..\include\wsock\base_definition.h" />
     <ClInclude Include="..\include\wsock\socket.h" />
+    <ClInclude Include="..\include\wsock\tcp_server_socket.h" />
+    <ClInclude Include="..\include\wsock\tcp_socket.h" />
     <ClInclude Include="..\include\wsock\udp_socket.h" />
     <ClInclude Include="..\include\wsock\wsa_init.h" />
     <ClInclude Include="imgui\imconfig-SFML.h" />

@@ -33,6 +33,12 @@ VoIP::VoIP(wsock::udpSocket& local, int samples_rate, int channels) : sock(local
 	receiver->set_jitter_buffer(jbuffer);
 	listener->set_decoder(dec);
 
+
+	income_sounds_c = 0;
+	outcome_sounds_c = 0;
+	cur_income = 0;
+	cur_outcome = 0;
+
 	load_sounds();
 	set_ui();
 	
@@ -87,7 +93,7 @@ void VoIP::multiplex()
 			{
 
 
-				conf.unpack(buff,m);
+				conf.unpack(buff,(int)m);
 
 				/* incoming */
 				if (conf.packet_type == CONF_CONNECTION_TYPE)
@@ -265,7 +271,8 @@ int VoIP::abort_to()
 
 void VoIP::set_ui()
 {
-	volume = 30;
+	
+	volume = 20;
 
 	window_pos = ImVec2(0, 0);
 	window_size = ImVec2(800, 800);
@@ -341,10 +348,6 @@ void VoIP::load_sounds()
 	s_tap1.setBuffer(tap1);
 	s_tap2.setBuffer(tap2);
 
-	income_sounds_c = 0;
-	outcome_sounds_c = 0;
-	cur_income = 0;
-	cur_outcome = 0;
 
 
 	/* clear sounds files from memory */
@@ -604,7 +607,7 @@ void VoIP::controller()
 			ImGui::LabelText("##label_incoming_sounds", "Incoming sound:");
 			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowPos().x + 150, ImGui::GetCursorPosY()));
 			
-			if (ImGui::Combo("##combo_incoming_sound", &cur_income, income_sounds_c, income_sounds.size()))
+			if (ImGui::Combo("##combo_incoming_sound", &cur_income, income_sounds_c, (int)income_sounds.size()))
 			{
 					s_tap2.play();
 					incoming.openFromFile(std::string("..\\sounds\\income\\") + std::string(income_sounds_c[cur_income]));
@@ -615,24 +618,46 @@ void VoIP::controller()
 			ImGui::LabelText("##label_outcoming_sounds", "Outcoming sound:");
 			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowPos().x + 150, ImGui::GetCursorPosY()));
 
-			if (ImGui::Combo("##combo_outcoming_sound", &cur_outcome, outcome_sounds_c, outcome_sounds.size()))
+			if (ImGui::Combo("##combo_outcoming_sound", &cur_outcome, outcome_sounds_c, (int)outcome_sounds.size()))
 			{
 				s_tap2.play();
 				outcoming.openFromFile(std::string("..\\sounds\\outcome\\") + std::string(outcome_sounds_c[cur_outcome]));
 
 			}
 
+			ImGui::SetWindowFontScale(2);
+			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowPos().x + 100, ImGui::GetCursorPosY() + 100));
+			//ImGui::LabelText("##local_info", "Local address: %s:%hu\n", sock._get_self_addr()._get_straddr().c_str(), sock._get_self_addr()._get_port());
+			if(ImGui::BeginTable("info_table",3,0,ImVec2(600,200)))
+			{
+				
+				ImGui::TableSetupColumn("Type");
+				ImGui::TableSetupColumn("Address");
+				ImGui::TableSetupColumn("Port");
+				ImGui::TableHeadersRow();
 
+				ImGui::TableNextColumn();
+				ImGui::Text("Internal");
+				ImGui::TableNextColumn();
+				ImGui::Text("%s", sock._get_self_addr()._get_straddr().c_str());
+				ImGui::TableNextColumn();
+				ImGui::Text("%hu", sock._get_self_addr()._get_port());
 
+				ImGui::TableNextColumn();
+				ImGui::Text("External");
+				ImGui::TableNextColumn();
+				ImGui::Text("%s", sock._get_self_addr()._get_straddr().c_str());
+				ImGui::TableNextColumn();
+				ImGui::Text("%hu", sock._get_self_addr()._get_port());
+
+				ImGui::EndTable();
+			}
 
 
 			ImGui::End();
 		}
 
-		/*if(ImGui::IsKeyDown(ImGuiKey_M))
-		{
-			printf("M_down\n");
-		}*/
+		
 		 
 		/* btns window */
 		if (ImGui::Begin("btns_win", 0, wbtns))
@@ -728,6 +753,8 @@ void VoIP::controller()
 				isSettingUp = !isSettingUp;
 
 			}
+
+		
 
 
 			ImGui::End();

@@ -8,7 +8,7 @@
 
 namespace stream
 {
-	
+	/* */
 	class NetStreamAudioIn : public Stream
 	{
 	private:
@@ -26,7 +26,10 @@ namespace stream
 		/* Protocol writes data to the buffer */
 		virtual int64_t stream_write(const void* frombuffer, int64_t writesize) override;
 
+		/* set pointer to jitter_buffer */
 		void set_jitter_buffer(jbuf::JitterBuffer* jitter_buffer);
+
+		/* reset data from buffer */
 		void reset_jitter_buffer();
 
 	};

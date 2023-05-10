@@ -56,6 +56,12 @@ namespace wsock
 
 		/* Return the address structure of the local interface bound of the socket */
 		addr _get_self_addr();
+
+		/* shutdown channels of socket */
+		int _shutdown(int how = SD_BOTH);
+
+		/* close socket */
+		int _close();
 		
 	protected:
 

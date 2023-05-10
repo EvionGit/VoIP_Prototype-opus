@@ -1,22 +1,20 @@
-#include "../include/wsock/udp_socket.h"
-
+#include <wsock/tcp_socket.h>
 
 namespace wsock
 {
-	udpSocket::udpSocket(const char* local_interface, const char* port, int family)
+	tcpSocket::tcpSocket(const char* local_interface, const char* port, int family) : isConnected(false)
 	{
-
 		/* Returning code of getaddrinfo */
 		INT r;
 
 		/* Pointer to addrinfo struct */
 		PADDRINFOA addrinfo, ptr_addrinfo;
 
-		/* Hints for UDP socket */
+		/* Hints for TCP passive socket */
 		ADDRINFOA hints;
 		memset(&hints, 0, sizeof(hints));
 		hints.ai_family = family;
-		hints.ai_socktype = SOCK_DGRAM;
+		hints.ai_socktype = SOCK_STREAM;
 
 
 
@@ -24,7 +22,7 @@ namespace wsock
 		if ((r = getaddrinfo((PCSTR)local_interface, (PCSTR)port, &hints, &addrinfo)) != 0)
 		{
 			lasterror = r;
-			throw std::runtime_error("<udp initialize error> (getaddrinfo error)");
+			throw std::runtime_error("<tcp initialize error> (getaddrinfo error)");
 		}
 
 		/* Choose the first suitable interface */
@@ -37,8 +35,8 @@ namespace wsock
 			{
 
 				/* Fill udpServer addr struct */
-				self_addr = addr(ptr_addrinfo->ai_addr, scast(int,ptr_addrinfo->ai_addrlen));
-				
+				self_addr = addr(ptr_addrinfo->ai_addr, scast(int, ptr_addrinfo->ai_addrlen));
+
 				if (_bind() != SOCKET_ERROR)
 				{
 					break;
@@ -56,21 +54,42 @@ namespace wsock
 		freeaddrinfo(addrinfo);
 		if (!sock)
 		{
-			throw std::runtime_error("<udp initialize error> (suitable interface not found)");
+			throw std::runtime_error("<tcp initialize error> (suitable interface not found)");
 		}
-
 	}
 
-	int udpSocket::_sendto(const addr& remote, const void* frombuf, int bufsize, int flag)
+	tcpSocket::tcpSocket(SOCKET s,addr& remote_addr)
+	{
+		sock = s;
+		self_addr = remote_addr;
+		isConnected = true;
+	}
+
+	int tcpSocket::_connect(const addr& remote)
 	{
 		int r;
-		if ((r = sendto(
+		if((r = connect(sock, (SA*)&remote.saddr, (int)remote.ssize)) == SOCKET_ERROR)
+		{
+			lasterror = WSAGetLastError();
+			return SOCKET_ERROR;
+		};
+
+		isConnected = true;
+		return 0;
+	}
+
+	int tcpSocket::_send(const void* frombuf, int bufsize, int flag)
+	{
+		if (!isConnected)
+			return WSAENOTCONN;
+
+		int r;
+		if ((r = send(
 			sock,
 			rcast(const char*, frombuf),
 			bufsize,
-			flag,
-			(SA*)&remote.saddr,
-			scast(int,remote.ssize))) == SOCKET_ERROR)
+			flag
+			)) == SOCKET_ERROR)
 		{
 			lasterror = WSAGetLastError();
 			return SOCKET_ERROR;
@@ -79,18 +98,19 @@ namespace wsock
 		return r;
 	}
 
-	int udpSocket::_recvfrom(addr& remote, void* tobuf, int bufsize, int flag)
+	int tcpSocket::_recv(void* tobuf, int bufsize, int flag)
 	{
-		int r;
-		
+		if (!isConnected)
+			return WSAENOTCONN;
 
-		if ((r = recvfrom(
+		int r;
+
+		if ((r = recv(
 			sock,
 			rcast(char*, tobuf),
 			bufsize,
-			flag,
-			(SA*)&remote.saddr,
-			rcast(int*,&(remote.ssize)))) == SOCKET_ERROR)
+			flag
+			)) == SOCKET_ERROR)
 		{
 			lasterror = WSAGetLastError();
 			return SOCKET_ERROR;
@@ -98,10 +118,4 @@ namespace wsock
 
 		return r;
 	}
-
-
-
-	
 }
-
-

@@ -23,12 +23,12 @@ namespace stream
 			}
 			else if (stat == JLOSTPACKET)
 			{
-			
+				/* lost packet mark for opus-decoder*/
 				return -2;
 			}
 			else if (stat == JBUFFERING ||  stat == JNODATA)
 			{
-				
+				/* buffering wait mark for non-blocking data reader*/
 				return -3;
 			}
 	
@@ -37,15 +37,16 @@ namespace stream
 		return 0;
 
 	}
+
 	int64_t NetStreamAudioIn::stream_write(const void* frombuffer, int64_t writesize)
 	{
 		
 		if (jb)
 		{
 			AudioPacket ap;
-			ap.unpack((char*)frombuffer,writesize);
+			ap.unpack((char*)frombuffer,(int)writesize);
 
-
+			/* arrived time */
 			Ttimepoint arr = std::chrono::high_resolution_clock::now();
 
 			return jb->push(ap, arr);

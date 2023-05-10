@@ -5,7 +5,7 @@ namespace wsock
 	
 	Socket::Socket() : sock(0)
 	{
-		//static sckt_wsa::WSA_INIT wsa_init;
+		
 	}
 
 	int Socket::_bind()
@@ -27,7 +27,7 @@ namespace wsock
 
 	Socket::~Socket()
 	{
-		closesocket(sock);
+		_close();
 		
 	}
 
@@ -44,12 +44,14 @@ namespace wsock
 			return SOCKET_ERROR;
 		return val;
 	}
+
 	int Socket::_set_receive_buf(DWORD bufsize)
 	{
 		int sval = sizeof(bufsize);
 		return setsockopt(sock, SOL_SOCKET, SO_RCVBUF, rcast(const char*, &bufsize), sval);
 			
 	}
+
 	DWORD Socket::_get_send_buf()
 	{
 		DWORD val;
@@ -58,6 +60,7 @@ namespace wsock
 			return SOCKET_ERROR;
 		return val;
 	}
+
 	int Socket::_set_send_buf(DWORD bufsize)
 	{
 		int sval = sizeof(bufsize);
@@ -73,12 +76,14 @@ namespace wsock
 			return SOCKET_ERROR;
 		return val;
 	}
+
 	int Socket::_set_recive_timeout(DWORD millisec)
 	{
 		int sval = sizeof(millisec);
 		return setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, rcast(const char*, &millisec), sval);
 			 
 	}
+
 	DWORD Socket::_get_send_timeout()
 	{
 		DWORD val;
@@ -87,6 +92,7 @@ namespace wsock
 			return SOCKET_ERROR;
 		return val;
 	}
+
 	int Socket::_set_send_timeout(DWORD millisec)
 	{
 		int sval = sizeof(millisec);
@@ -99,6 +105,7 @@ namespace wsock
 		u_long s = 1;
 		return ioctlsocket(sock, FIONBIO, &s);
 	}
+
 	int Socket::_set_block()
 	{
 		u_long s = 0;
@@ -113,6 +120,16 @@ namespace wsock
 	int Socket::_get_sockopt(int level, int optname, char* optval, int* optlen)
 	{
 		return getsockopt(sock, level, optname, optval, optlen);
+	}
+	
+	int Socket::_shutdown(int how)
+	{
+		return shutdown(sock, how);
+	}
+
+	int Socket::_close()
+	{
+		return closesocket(sock);
 	}
 }
 

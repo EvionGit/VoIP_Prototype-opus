@@ -102,8 +102,7 @@ namespace wsock
 		/* Returning code of getaddrinfo */
 		INT r;
 		std::vector<std::string> interfaces;
-		interfaces.push_back("0.0.0.0");
-		interfaces.push_back("localhost");
+		
 		
 		/* Pointer to addrinfo struct */
 		PADDRINFOA addrinfo,ptrinfo;
@@ -143,6 +142,9 @@ namespace wsock
 		/* Clear the addrinfo list */
 		freeaddrinfo(addrinfo);
 
+
+		interfaces.push_back("0.0.0.0");
+		interfaces.push_back("localhost");
 		return interfaces;
 	}
 }

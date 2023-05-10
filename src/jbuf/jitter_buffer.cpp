@@ -28,7 +28,6 @@ namespace jbuf
 		}
 
 
-		this->ping = 0;
 		this->interpackets_delay_ms = 0;
 		this->max_payload_size_bytes = 0;
 		this->payload_ms_per_packet = 0;

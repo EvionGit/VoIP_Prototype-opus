@@ -78,6 +78,12 @@
     <ClCompile Include="..\src\VoIP.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\wsock\tcp_server_socket.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wsock\tcp_socket.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\wsock\addr_struct.h">
@@ -135,6 +141,12 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="..\include\VoIP.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\wsock\tcp_server_socket.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\wsock\tcp_socket.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

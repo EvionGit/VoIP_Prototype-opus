@@ -6,7 +6,7 @@ namespace stream
 	AudioStreamIn::AudioStreamIn() : s(0),e(0),size(0)
 	{
 		sf::Time t = sf::milliseconds(20);
-		setProcessingInterval(t);
+		setProcessingInterval(t); /* generate 20ms chunks with audio data */
 		memset(audiobuffer, 0, AUDIOBUFF);
 	}
 
@@ -152,6 +152,7 @@ namespace stream
 
 	bool AudioStreamIn::onStart()
 	{
+		/* refresh pointers to 0 */
 		s = e = size = 0;
 		end_of_file = false;
 		return true;

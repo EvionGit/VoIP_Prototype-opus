@@ -172,8 +172,6 @@ int main()
 	delete[] interfaces_c;
 
 
-	
-
 	return 0;
 
 

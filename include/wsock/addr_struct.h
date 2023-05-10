@@ -12,6 +12,8 @@ namespace wsock
 	{
 		friend class Socket;
 		friend class udpSocket;
+		friend class tcpSocket;
+		friend class tcpServerSocket;
 
 	private:
 		SOCKADDR_STORAGE saddr;
