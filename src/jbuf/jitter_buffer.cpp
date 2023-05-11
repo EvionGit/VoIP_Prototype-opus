@@ -73,7 +73,7 @@ namespace jbuf
 
 	int JitterBuffer::push(AudioPacket& packet, Ttimepoint arrived_time)
 	{
-		printf("PUSHED\n");
+		
 		std::lock_guard<std::mutex> lock(mtx);
 
 		calculate_jitter(packet, arrived_time);

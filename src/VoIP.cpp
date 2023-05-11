@@ -211,6 +211,7 @@ void VoIP::multiplex()
 				else if (conf.packet_type == CONF_ALIVE_TYPE)
 				{
 					/* just waiting */
+					printf("ALIVE\n");
 				}
 			}
 
@@ -562,7 +563,7 @@ void VoIP::controller()
 			/* if mic is muted send alive pack */
 			if(isMuting)
 			{
-				if ((std::chrono::high_resolution_clock::now() - alive_process).count() / 1000000 > 5000)
+				if ((std::chrono::high_resolution_clock::now() - alive_process).count() / 1000000 > 2000)
 				{
 					alive_process = std::chrono::high_resolution_clock::now();
 					send_alive();
@@ -911,7 +912,13 @@ void VoIP::start_record_process()
 	enc->set_bitrate(bitrate);
 	enc->set_output_stream(sender);
 	recorder->setChannelCount(local_conf.channels);
-	recorder->start(local_conf.samples_rate);
+	if (!recorder->start(local_conf.samples_rate))
+	{
+		micref = mic + 1;
+		isMuting = true;
+	}
+		
+
 	enc->thread_encode();
 
 }
