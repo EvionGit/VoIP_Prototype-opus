@@ -1,7 +1,16 @@
 #include "VoIP.h"
 
-VoIP::VoIP(wsock::udpSocket& local, int samples_rate, int channels) : sock(local), current_process_time(0)
+VoIP::VoIP(wsock::udpSocket& local, int samples_rate, int channels) : sock(local), current_process_time(0),
+																				   isCallWaiting(false)
 {
+	external_ip = local._get_self_addr()._get_straddr();
+	noInternet = false;
+
+	/* check internet connection and get exteranal address */
+	std::thread check_net(&VoIP::get_external_ip, this);
+	check_net.detach();
+
+
 	/* set local configs to ConfPacket */
 	local_conf.channels = channels;
 	local_conf.data_size_ms = 20;
@@ -41,6 +50,7 @@ VoIP::VoIP(wsock::udpSocket& local, int samples_rate, int channels) : sock(local
 
 	load_sounds();
 	set_ui();
+
 	
 
 	/* start thread for receiving data */
@@ -72,17 +82,64 @@ VoIP::~VoIP()
 		delete[] outcome_sounds_c;
 }
 
+int VoIP::get_external_ip()
+{
+	wsock::tcpSocket sock;
+	/* web to get external IP */
+	std::string url = "api.ipify.org";
+
+	try
+	{
+		wsock::addr host(url, "80", SOCK_STREAM);
+
+		sock._connect(host);
+
+		std::string get_request = "GET / HTTP/1.1\r\nHost: " + url + "\r\nConnection: close\r\n\r\n";
+		sock._send(get_request.data(), get_request.size());
+
+		char buf[1024];
+		int h = sock._recv(buf, 1024);
+		buf[h] = '\0';
+
+		std::string resp(buf);
+
+		if (resp.find("HTTP/1.1 200 OK") != std::string::npos)
+		{
+
+			int size_start = resp.find("Content-Length: ") + 16;
+			std::string size_part = resp.substr(size_start, h - size_start);
+			int size_end = size_part.find('\r');
+
+
+			int content_length = atoi(size_part.substr(0, size_end).c_str());
+
+			external_ip = resp.substr(h - content_length, content_length);
+			return 1;
+
+		}
+
+	}
+	catch (...)
+	{
+		noInternet = true;
+		return 0;
+	}
+
+	external_ip = sock._get_self_addr()._get_straddr();
+	return 0;
+}
+
 void VoIP::multiplex()
 {
 	char buff[1024];
 	wsock::addr from;
 	pack::AudioConfigPacket conf;
-	size_t m;
+	int64_t m;
 	while (1)
 	{
 		if ((m = sock._recvfrom(from, buff, sizeof(buff), 0)) > 0)
 		{
-
+			
 			if (*(int8_t*)buff == AUDIO_PACKET_TYPE)
 			{
 				
@@ -129,7 +186,6 @@ void VoIP::multiplex()
 				{
 					if ((isIncoming || inProcessing || isCalling) && from._get_straddr() == remote->_get_straddr())
 					{
-						printf("ABORTING\n");
 						abort_to();
 					}
 
@@ -142,7 +198,6 @@ void VoIP::multiplex()
 						remote_conf = conf;
 						accept_to();
 
-
 					}
 				}
 				/* if received BUSY type*/
@@ -151,8 +206,19 @@ void VoIP::multiplex()
 					printf("BUSY NOW\n");
 					isCalling = false;
 				}
+
+				/* alive type */
+				else if (conf.packet_type == CONF_ALIVE_TYPE)
+				{
+					/* just waiting */
+				}
 			}
 
+		}
+		else if(WSAGetLastError() == WSAETIMEDOUT)
+		{
+			printf("TIMEDOUT\n");
+			abort_to();
 		}
 
 	}
@@ -177,6 +243,10 @@ int VoIP::accept_to()
 	if (isSpeaking)
 		start_listen_process();
 
+	outcoming.stop();
+
+	/* set sock timeout */
+	sock._set_receive_timeout(10000);
 
 	return 1;
 }
@@ -190,7 +260,7 @@ int VoIP::call_to()
 	{
 		local_conf.packet_type = CONF_CONNECTION_TYPE;
 
-
+		
 		if (remote)
 			delete remote;
 
@@ -204,6 +274,9 @@ int VoIP::call_to()
 		outcoming.play();
 		isCalling = true;
 
+		/* init calling timer */
+		isCallWaiting = true;
+		calling_process = std::chrono::high_resolution_clock::now();
 	}
 	/* accept incoming call */
 	else
@@ -226,6 +299,9 @@ int VoIP::call_to()
 			start_record_process();
 		if (isSpeaking)
 			start_listen_process();
+
+		/* set sock timeout */
+		sock._set_receive_timeout(10000);
 
 	}
 
@@ -255,12 +331,16 @@ int VoIP::abort_to()
 	inProcessing = false;
 	isIncoming = false;
 
+	isCallWaiting = false;
+
 	/* send ABORT type msg to remote */
 	local_conf.packet_type = CONF_ABORTING_TYPE;
 
 	char confbuf[sizeof(pack::AudioConfigPacket)];
 	local_conf.pack(confbuf, sizeof(pack::AudioConfigPacket));
 	sock._sendto(*remote, confbuf, sizeof(pack::AudioConfigPacket));
+
+	sock._set_receive_timeout(0);
 
 	/* change ABORT-img to CALL-img  */
 	callref = call;
@@ -319,12 +399,16 @@ void VoIP::set_ui()
 
 	process.loadFromFile("..\\img\\process.png");
 
+	internet.loadFromFile("..\\img\\nointernet.png");
+
 	isCalling = false;
 	inProcessing = false;
 	isIncoming = false;
 	isMuting = false;
 	isSpeaking = true;
 	isSettingUp = false;
+
+
 
 	
 }
@@ -402,6 +486,14 @@ void VoIP::load_sounds()
 	outcoming.openFromFile(std::string("..\\sounds\\outcome\\") + std::string(outcome_sounds_c[cur_outcome]));
 }
 
+void VoIP::send_alive()
+{
+	char confbuf[sizeof(pack::AudioConfigPacket)];
+	local_conf.packet_type = CONF_ALIVE_TYPE;
+	local_conf.pack(confbuf, sizeof(pack::AudioConfigPacket));
+	sock._sendto(*remote, confbuf, sizeof(pack::AudioConfigPacket));
+}
+
 void VoIP::controller()
 {
 	if (isIncoming && ImGui::Begin("incoming_win", 0, wcallto))
@@ -464,7 +556,19 @@ void VoIP::controller()
 	{
 		if (inProcessing && ImGui::Begin("process_win", 0, wcallto))
 		{
+			/* check avaiabliity of using micro */
 			check_microphone();
+
+			/* if mic is muted send alive pack */
+			if(isMuting)
+			{
+				if ((std::chrono::high_resolution_clock::now() - alive_process).count() / 1000000 > 5000)
+				{
+					alive_process = std::chrono::high_resolution_clock::now();
+					send_alive();
+				}
+					
+			}
 
 			current_process_time = (std::chrono::high_resolution_clock::now().time_since_epoch().count()
 				- start_process.time_since_epoch().count()) / 1000000000;
@@ -499,6 +603,14 @@ void VoIP::controller()
 
 			ImGui::SetWindowPos("callto_win", window_pos);
 			ImGui::SetWindowSize("callto_win", window_size);
+
+			/* no internet warning */
+			if(noInternet)
+			{
+				ImGui::SetCursorPos(ImVec2(730, 10));
+				ImGui::Image(internet, ImVec2(60, 60));
+			}
+				
 
 			/* ip label */
 			ImGui::SetWindowFontScale(2);
@@ -548,6 +660,17 @@ void VoIP::controller()
 			ImGui::SetWindowPos("calling_win", window_pos);
 			ImGui::SetWindowSize("calling_win", window_size);
 
+			/* no internet warning */
+			if (noInternet)
+			{
+				ImGui::SetCursorPos(ImVec2(730, 10));
+				ImGui::Image(internet, ImVec2(60, 60));
+			}
+
+			if(isCallWaiting && (std::chrono::high_resolution_clock::now() - calling_process).count() / 1000000 > 60000)
+			{
+				abort_to();
+			}
 
 			ImGui::SetWindowFontScale(3);
 			ImGui::SetCursorPos(ImVec2(280, 250));
@@ -626,9 +749,9 @@ void VoIP::controller()
 			}
 
 			ImGui::SetWindowFontScale(2);
-			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowPos().x + 100, ImGui::GetCursorPosY() + 100));
+			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowPos().x + 50, ImGui::GetCursorPosY() + 100));
 			//ImGui::LabelText("##local_info", "Local address: %s:%hu\n", sock._get_self_addr()._get_straddr().c_str(), sock._get_self_addr()._get_port());
-			if(ImGui::BeginTable("info_table",3,0,ImVec2(600,200)))
+			if(ImGui::BeginTable("info_table",3,0,ImVec2(700,200)))
 			{
 				
 				ImGui::TableSetupColumn("Type");
@@ -646,7 +769,7 @@ void VoIP::controller()
 				ImGui::TableNextColumn();
 				ImGui::Text("External");
 				ImGui::TableNextColumn();
-				ImGui::Text("%s", sock._get_self_addr()._get_straddr().c_str());
+				ImGui::Text("%s", external_ip.c_str());
 				ImGui::TableNextColumn();
 				ImGui::Text("%hu", sock._get_self_addr()._get_port());
 
@@ -683,13 +806,16 @@ void VoIP::controller()
 				if (isMuting)
 				{
 					micref = mic;
-					start_record_process();
+					if(inProcessing)
+						start_record_process();
 				}
 
 				else
 				{
 					micref = mic + 1;
 					stop_record_process();
+					if (inProcessing)
+						alive_process = std::chrono::high_resolution_clock::now();
 				}
 
 				isMuting = !isMuting;
@@ -703,7 +829,8 @@ void VoIP::controller()
 				if (!isSpeaking)
 				{
 					speakref = speak;
-					start_listen_process();
+					if (inProcessing)
+						start_listen_process();
 				}
 
 				else

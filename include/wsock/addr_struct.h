@@ -22,7 +22,7 @@ namespace wsock
 	public:
 		addr();
 		addr(const SOCKADDR* sockadd, int size);
-		addr(std::string host,std::string port,int family = AF_INET);
+		addr(std::string host,std::string port,int socket_type = SOCK_DGRAM,int family = AF_INET);
 		const SOCKADDR_STORAGE& _get_saddr();
 		uint16_t _get_port();
 		std::string _get_straddr();

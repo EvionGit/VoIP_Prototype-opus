@@ -1,10 +1,15 @@
 #include "VoIP.h"
-#include <iostream>
+
 
 
 
 #define VOIP_APP 1
 #define STREAM_APP 2
+
+
+
+
+
 
 int main()
 {
@@ -22,6 +27,9 @@ int main()
 	start_app.openFromFile("..\\sounds\\start\\voip-start.wav");
 	start_app.setPlayingOffset(sf::milliseconds(900));
 	start_app.setVolume(30);
+
+
+	
 
 
 	sf::RenderWindow window(sf::VideoMode(800, 1000), "VoIP - prototype");
@@ -91,17 +99,17 @@ int main()
 		else if (app == STREAM_APP)
 			printf("dont implemented\n");
 
-		else if(ImGui::Begin("main_window",0,main_flags))
+		else if (ImGui::Begin("main_window", 0, main_flags))
 		{
 			ImGui::SetWindowPos("main_window", mwindow_pos);
 			ImGui::SetWindowSize("main_window", mwindow_size);
 			ImGui::SetWindowFontScale(2);
 
-			ImGui::SetCursorPos(ImVec2(150,150));
+			ImGui::SetCursorPos(ImVec2(150, 150));
 			ImGui::LabelText("##label_local_interface", "Local interface: ");
 			ImGui::SetWindowFontScale(3);
 			ImGui::SetCursorPos(ImVec2(150, 190));
-			if(ImGui::Combo("##interface",&interface_selected,interfaces_c,interfaces_s.size()))
+			if (ImGui::Combo("##interface", &interface_selected, interfaces_c, interfaces_s.size()))
 			{
 				s_tap1.play();
 				/* change active interface */
@@ -124,39 +132,39 @@ int main()
 			ImGui::LabelText("##label_samples_rate", "Samples rate (Hz): ");
 			ImGui::SetCursorPos(ImVec2(150, 490));
 			ImGui::SetWindowFontScale(3);
-			if(ImGui::Combo("##samples_rate", &cur_sample_rate, samples_rate, 5))
+			if (ImGui::Combo("##samples_rate", &cur_sample_rate, samples_rate, 5))
 				s_tap1.play();
-			
+
 
 			ImGui::SetCursorPos(ImVec2(150, 550));
 			ImGui::SetWindowFontScale(2);
 			ImGui::LabelText("##label_channels", "Channels: ");
 			ImGui::SetCursorPos(ImVec2(150, 590));
 			ImGui::SetWindowFontScale(3);
-			if(ImGui::SliderInt("##slider_channels", &channels, 1, 2))
+			if (ImGui::SliderInt("##slider_channels", &channels, 1, 2))
 				s_tap1.play();
 
 
 			ImGui::SetCursorPos(ImVec2(200, 800));
 			ImGui::SetWindowFontScale(2);
-			if(ImGui::Button("Start VoIP",ImVec2(400,150)))
+			if (ImGui::Button("Start VoIP", ImVec2(400, 150)))
 			{
 				s_tap1.play();
 				start_app.play();
 				app = VOIP_APP;
-				if(!voip)
+				if (!voip)
 				{
 					sock = new wsock::udpSocket(interfaces_c[interface_selected], std::to_string(port).c_str());
 					voip = new VoIP(*sock, atoi(samples_rate[cur_sample_rate]), channels);
-					
+
 				}
 			}
 
 			ImGui::End();
 		}
 
-		
-	
+
+
 
 
 		window.clear();
@@ -170,6 +178,7 @@ int main()
 	delete voip;
 	delete sock;
 	delete[] interfaces_c;
+
 
 
 	return 0;

@@ -32,9 +32,10 @@ namespace stream
 		
 			int s_in_bytes;
 			while ((s_in_bytes = dec->decode_to(sampbuf)) == 0 && reading) {}
-
+			printf("data read: %i\n",s_in_bytes);
 			if(!s_in_bytes && !reading)
 			{
+				
 				return false;
 			}
 			

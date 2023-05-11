@@ -77,7 +77,7 @@ namespace wsock
 		return val;
 	}
 
-	int Socket::_set_recive_timeout(DWORD millisec)
+	int Socket::_set_receive_timeout(DWORD millisec)
 	{
 		int sval = sizeof(millisec);
 		return setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, rcast(const char*, &millisec), sval);

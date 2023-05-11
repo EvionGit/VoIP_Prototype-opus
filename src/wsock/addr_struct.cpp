@@ -16,7 +16,7 @@ namespace wsock
 
 	}
 
-	addr::addr(std::string host, std::string port, int family)
+	addr::addr(std::string host, std::string port,int socket_type, int family)
 	{
 		
 		/* Returning code of getaddrinfo */
@@ -29,12 +29,14 @@ namespace wsock
 		ADDRINFOA hints;
 		memset(&hints, 0, sizeof(hints));
 		hints.ai_family = family;
+		hints.ai_socktype = socket_type;
 
 
 		/* Get all of the appropriate interfaces with HINTS */
 		if ((r = getaddrinfo((PCSTR)host.c_str(), (PCSTR)port.c_str(), &hints, &addrinfo)) != 0)
 		{
 			lasterror = r;
+			
 			throw std::exception("<addr initialize error> (getaddrinfo error)");
 		}
 
@@ -47,6 +49,7 @@ namespace wsock
 		else
 		{
 			freeaddrinfo(addrinfo);
+			
 			throw std::runtime_error("<No addresses> (DNS error)");
 		}
 

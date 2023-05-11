@@ -11,6 +11,7 @@
 #define CONF_BUSY_TYPE 3
 #define CONF_ACCEPT_TYPE 4
 #define CONF_RECONF_TYPE 5
+#define CONF_ALIVE_TYPE 6
 
 
 namespace pack

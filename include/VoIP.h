@@ -5,6 +5,7 @@
 
 #include <wsock/wsa_init.h>
 #include <wsock/udp_socket.h>
+#include <wsock/tcp_socket.h>
 
 #include <pack/config_packet.h>
 
@@ -55,6 +56,16 @@ private:
 	std::chrono::high_resolution_clock::time_point start_process;
 	long long current_process_time;
 
+	/* calling timer */
+	std::chrono::high_resolution_clock::time_point calling_process;
+	bool isCallWaiting;
+
+	/* alive timer */
+	std::chrono::high_resolution_clock::time_point alive_process;
+
+	/* external ip */
+	std::string external_ip;
+
 private:
 	/* dropdown to choice a microphone */
 	ImGui::MicDropDown* mic_dropdown;
@@ -90,6 +101,8 @@ private:
 
 	sf::Texture process;
 
+	sf::Texture internet;
+
 	/* volume value */
 	int volume;
 
@@ -101,6 +114,8 @@ private:
 	bool isCalling;
 	bool inProcessing;
 	bool isIncoming;
+	bool noInternet;
+
 
 	/* btns state */
 	bool isMuting;
@@ -125,6 +140,9 @@ public:
 	~VoIP();
 
 private:
+
+	/* if mute send alive pack */
+	void send_alive();
 
 	/* initialize UI */
 	void set_ui();
@@ -162,6 +180,8 @@ private:
 	/* stops listen process (stops listener and clears listen-buffer) */
 	void stop_listen_process();
 
+	/* get external ip */
+	int get_external_ip();
 
 	/* active conversation timer to string converter */
 	std::string get_clock(long long time_in_sec);

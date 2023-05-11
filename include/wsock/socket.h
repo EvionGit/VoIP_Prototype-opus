@@ -32,7 +32,7 @@ namespace wsock
 		DWORD _get_receive_timeout();
 
 		/* Set the amount of timeout to receive function */
-		int _set_recive_timeout(DWORD millisec);
+		int _set_receive_timeout(DWORD millisec);
 
 		/* Return the amount of timeout to send function */
 		DWORD _get_send_timeout();
