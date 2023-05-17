@@ -27,8 +27,6 @@ namespace ops
 		int16_t* ichunk;
 		int32_t ichunk_size;
 
-		int32_t orate;
-		int32_t ochannels;
 		unsigned char* ochunk;
 		int32_t ochunk_size;
 		

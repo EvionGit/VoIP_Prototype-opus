@@ -33,10 +33,10 @@ namespace stream
 		/* App writes data to the buffer */
 		virtual int64_t stream_write(const void* frombuffer, int64_t writesize) override;
 
+	private:
 		/* sound recorder override. Calls when need data to playing*/
 		virtual bool onProcessSamples(const sf::Int16* samples, size_t sampleCount) override;
 
-	private:
 		/* before start recording - unset EoF flag */
 		virtual bool onStart() override;
 

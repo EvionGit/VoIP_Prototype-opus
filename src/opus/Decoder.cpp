@@ -4,7 +4,7 @@ namespace ops
 {
 	Decoder::Decoder()
 		:input(0), output(0),dec(0), errorcode(0), 
-		irate(0), ichannels(0), ichunk(0), ichunk_size(0),
+		 ichunk(0), ichunk_size(4000),
 		orate(0), ochannels(0), ochunk(0), ochunk_size(0),oms(0)
 	{
 
@@ -84,7 +84,8 @@ READER:
 		if (ichunk)
 			delete[] ichunk;
 
-		ichunk = new unsigned char[4000];
+		
+		ichunk = new unsigned char[ichunk_size];
 
 	
 	}

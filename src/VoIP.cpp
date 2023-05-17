@@ -211,7 +211,6 @@ void VoIP::multiplex()
 				else if (conf.packet_type == CONF_ALIVE_TYPE)
 				{
 					/* just waiting */
-					printf("ALIVE\n");
 				}
 			}
 

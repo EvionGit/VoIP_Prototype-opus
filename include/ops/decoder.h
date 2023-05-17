@@ -17,8 +17,7 @@ namespace ops
 		Stream* input;
 		Stream* output;
 
-		int32_t irate;
-		int32_t ichannels;
+	
 		unsigned char* ichunk;
 		int32_t ichunk_size;
 

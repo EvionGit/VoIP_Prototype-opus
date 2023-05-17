@@ -7,7 +7,7 @@ namespace ops
 		  input(0), output(0), tick_rate(0), bitrate(128000), send_event(0),
 		  enc(0),errorcode(0),opus_type(OPUS_TYPE::AUDIO),
 		  irate(0), ichannels(0), ims(0),ichunk(0),ichunk_size(0),
-		  orate(0), ochannels(0), ochunk(0), ochunk_size(0)
+		  ochunk(0), ochunk_size(4000)
 	{
 		switch(opus_app_type)
 		{
@@ -61,7 +61,7 @@ namespace ops
 		if (ochunk)
 			delete[] ochunk;
 
-		ochunk = new unsigned char[4000];
+		ochunk = new unsigned char[ochunk_size];
 
 		
 		

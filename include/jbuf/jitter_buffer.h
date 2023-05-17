@@ -38,12 +38,11 @@ namespace jbuf
 		bool is_circular; // if true - new packets of data will waiting while buffer is full 
 
 
-		//std::deque<char*> payload_memory_pool; // pool of available memory blocks for arriving packets   
 		std::deque<AudioPacket> buffer; // jitter buffer for received data
 		std::mutex mtx; // mutex for multi-threading access
 
 		bool isFirst_packet = true; // refresh beginning packet id if true;
-		uint16_t last_packet_id = 0; // order control
+		uint32_t last_packet_id = 0; // order control
 
 		uint32_t buffering_time_ms; // time for buffering
 		Ttimepoint buffering_start; // start time-point for buffering
