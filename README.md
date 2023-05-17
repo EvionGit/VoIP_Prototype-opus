@@ -5,10 +5,10 @@ ___
 
 ## Project structure
 ### The project consists of 4 modules:
-+ Data transmission
-+ Audio data capture and compression
-+ Data decompression and playback
-+ Controller
++ [Data transmission](https://github.com/EvionGit/VoIP_Prototype-opus/edit/main/README.md#module-1-data-transmission)
++ [Audio data capture and compression](https://github.com/EvionGit/VoIP_Prototype-opus#module-2-audio-capture-and-compression)
++ [Data decompression and playback](https://github.com/EvionGit/VoIP_Prototype-opus#module-3-audio-decompression-and-playback)
++ [Controller](https://github.com/EvionGit/VoIP_Prototype-opus#module-4-controller)
 
 ___
 ## The diagram below shows all classes and their relationships
@@ -52,8 +52,37 @@ ____
 
 ## Demonstration of the work
 
-+ A start window with a selection of audio capture settings and an outgoing network interface.
-![]()
++ A start window with a selection of audio capture settings and an active network interface.
+  + <img src="https://github.com/EvionGit/VoIP_Prototype-opus/blob/main/readme-src/start-w.png" width="300">
 
++ The main window with an invitation to enter the IP address and port of the companion. With functional call control buttons.
+  + <img src="https://github.com/EvionGit/VoIP_Prototype-opus/blob/main/readme-src/main-w.png" width="300">
+
++ The settings window allows you to specify the active microphone and the data transmission quality. Additionally, notification sound. There is also an information table of the current network interface.
+  + <img src="https://github.com/EvionGit/VoIP_Prototype-opus/blob/main/readme-src/settings-w.png" width="300">
+
++ Process window with timer.
+  + <img src="https://github.com/EvionGit/VoIP_Prototype-opus/blob/main/readme-src/call-w.png" width="300">
+
+<br><br><br>
+____
+
+## Ways of development
+- [X] build UI-frame
+- [X] build controller
+- [X] choose audio codec
+- [X] binding with controller
+- [X] use raw UDP and TCP
+- [X] build P2P network model
+- [ ] migration to RTP/RTCP/SIP
+- [ ] add encryption
+- [ ] update jitter buffer to adaptive
+- [ ] add conferences
+- [ ] add video communication
+- [ ] migration to model with dedicated server 
+
+____
+
+### *Note that: for the current version of the application built on the P2P model, calls in the global network require a dedicated IP address or a preliminary port forwarding via NAT* 
 
 
